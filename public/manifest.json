@@ -1,0 +1,65 @@
+{
+  "name": "VNX-Netscan | Network Diagnostics",
+  "short_name": "VNX-Netscan",
+  "description": "Powerful toolkit for IP scanning, WHOIS, and traceroute",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "developer", "networking"],
+  "screenshots": [
+    {
+      "src": "/assets/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/assets/screenshot-mobile.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "IP Lookup",
+      "short_name": "IP Lookup",
+      "description": "Quickly lookup IP information",
+      "url": "/?tool=ip-lookup",
+      "icons": [
+        {
+          "src": "/assets/icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Port Scanner",
+      "short_name": "Port Scan",
+      "description": "Scan for open ports",
+      "url": "/?tool=port-scan",
+      "icons": [
+        {
+          "src": "/assets/icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}
