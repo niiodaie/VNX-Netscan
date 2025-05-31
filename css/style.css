@@ -1,0 +1,272 @@
+/* VNX-Netscan Custom Styles */
+/* Modern CSS for the VNX-Netscan Network Diagnostic Tool */
+
+:root {
+  --primary-color: #3B82F6;
+  --primary-dark: #1D4ED8;
+  --primary-light: #60A5FA;
+  --success-color: #10B981;
+  --warning-color: #F59E0B;
+  --error-color: #EF4444;
+  --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --border: #E2E8F0;
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Blue glow effect for input fields */
+.glow-border {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--primary-color), var(--primary-light), var(--primary-color));
+  border-radius: inherit;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  filter: blur(4px);
+}
+
+.glow-border:focus-within::before {
+  opacity: 0.6;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    opacity: 0.4;
+    filter: blur(4px);
+  }
+  50% { 
+    opacity: 0.8;
+    filter: blur(8px);
+  }
+}
+
+/* Scan animation effects */
+.scan-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+  animation: scan-progress 2s ease-in-out infinite;
+}
+
+@keyframes scan-progress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+/* Terminal-style output */
+.terminal-output {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background: #1a1a1a;
+  color: #00ff00;
+  padding: 1rem;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.4;
+  border: 1px solid #333;
+}
+
+/* Button hover effects */
+.scan-button {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.scan-button:active {
+  transform: translateY(0);
+}
+
+/* Status indicators */
+.status-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-online { background-color: var(--success-color); }
+.status-offline { background-color: var(--error-color); }
+.status-scanning { 
+  background-color: var(--warning-color);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Card styles */
+.vnx-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+}
+
+.vnx-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-light);
+}
+
+/* Progress bars */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Network topology visualization */
+.network-node {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  border: 3px solid var(--surface);
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.network-node:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.network-connection {
+  stroke: var(--primary-color);
+  stroke-width: 2;
+  stroke-dasharray: 5,5;
+  animation: dash 1s linear infinite;
+}
+
+@keyframes dash {
+  to { stroke-dashoffset: -10; }
+}
+
+/* Result highlighting */
+.result-highlight {
+  background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+  border-left: 4px solid var(--warning-color);
+  padding: 0.5rem;
+  border-radius: 0 8px 8px 0;
+  margin: 0.5rem 0;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .glow-border::before {
+    filter: blur(2px);
+  }
+  
+  .scan-button {
+    font-size: 14px;
+    padding: 0.75rem 1rem;
+  }
+  
+  .terminal-output {
+    font-size: 12px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0F172A;
+    --surface: #1E293B;
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --border: #334155;
+  }
+  
+  .terminal-output {
+    background: #000000;
+    border-color: #1a1a1a;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .glow-border::before,
+  .scan-line::after,
+  .network-connection,
+  .status-scanning,
+  .scan-button {
+    animation: none;
+  }
+  
+  .scan-button:hover {
+    transform: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .scan-button,
+  .glow-border::before {
+    display: none;
+  }
+  
+  .terminal-output {
+    background: white;
+    color: black;
+    border: 1px solid #ccc;
+  }
+}
