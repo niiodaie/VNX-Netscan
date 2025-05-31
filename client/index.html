@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>VNX-Netscan | Network Diagnostics</title>
+    <meta name="description" content="Powerful toolkit for IP scanning, WHOIS, and traceroute" />
+    <meta name="keywords" content="network diagnostic, IP lookup, port scan, WHOIS, traceroute, network analysis, VNX, Visnec Nexus" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="VNX-Netscan | Network Diagnostics" />
+    <meta property="og:description" content="Powerful toolkit for IP scanning, WHOIS, and traceroute" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://netscan.visnec.ai" />
+    <meta property="og:image" content="https://netscan.visnec.ai/assets/icon.png" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="VNX-Netscan - Network Diagnostic Tool" />
+    <meta name="twitter:description" content="Professional network analysis with IP lookup, port scanning, and more." />
+    <meta name="twitter:image" content="https://netscan.visnec.ai/assets/icon.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/icon.png" />
+    <link rel="apple-touch-icon" href="/assets/icon.png" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#3B82F6" />
+    
+    <!-- Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(function(registration) {
+              console.log('SW registered: ', registration);
+            })
+            .catch(function(registrationError) {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QRXTLK9YVM"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-QRXTLK9YVM');
+    </script>
+    
+    <!-- Plausible Analytics -->
+    <script defer data-domain="vnx-netscan.vercel.app" src="https://plausible.io/js/script.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
+</html>
