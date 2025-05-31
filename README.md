@@ -23,7 +23,7 @@ A comprehensive network diagnostic web tool with IP lookup, port scanning, WHOIS
 
 ## File Structure
 
-```
+`
 VNX-Netscan/
 ├── client/                 # React frontend
 │   ├── src/
