@@ -1,0 +1,171 @@
+{
+  "app": {
+    "title": "vNetscan",
+    "subtitle": "Visnec Nexus - Diagnostics Réseau",
+    "description": "Outil professionnel de diagnostic réseau pour la recherche IP, le scan de ports, WHOIS et l'analyse traceroute.",
+    "tagline": "Kit d'Outils de Diagnostic Réseau"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "tools": "Outils",
+    "about": "À propos",
+    "contact": "Contact"
+  },
+  "tools": {
+    "ipLookup": {
+      "name": "Recherche IP",
+      "description": "Informations IP de base",
+      "button": "Démarrer Recherche IP"
+    },
+    "geoInfo": {
+      "name": "Info Géo",
+      "description": "Détails localisation et FAI",
+      "button": "Démarrer Info Géo"
+    },
+    "portScan": {
+      "name": "Scan de Ports",
+      "description": "Vérifier ports ouverts",
+      "button": "Démarrer Scan de Ports"
+    },
+    "whois": {
+      "name": "WHOIS",
+      "description": "Infos d'enregistrement domaine",
+      "button": "Démarrer WHOIS"
+    },
+    "traceroute": {
+      "name": "Traceroute",
+      "description": "Analyse du chemin réseau",
+      "button": "Démarrer Traceroute"
+    },
+    "bulkScan": {
+      "name": "Scan Groupé",
+      "description": "Tous les outils à la fois",
+      "button": "Démarrer Scan Groupé"
+    }
+  },
+  "interface": {
+    "inputPlaceholder": "Saisissez adresse IP ou nom de domaine (ex: 8.8.8.8 ou google.com)",
+    "scanMyIP": "Scanner Mon IP",
+    "clear": "Effacer",
+    "exportResults": "Exporter Résultats",
+    "copyResults": "Copier Résultats",
+    "clearResults": "Effacer Résultats",
+    "scanning": "Scan en cours",
+    "ready": "Prêt à scanner",
+    "online": "En ligne",
+    "enterTarget": "Saisir la cible d'abord"
+  },
+  "results": {
+    "title": "Résultats d'Analyse",
+    "noResults": "Aucun résultat à exporter",
+    "noResultsCopy": "Aucun résultat à copier",
+    "scanCompleted": "scans terminés",
+    "scanFailed": "Échec du scan",
+    "exportSuccess": "Résultats exportés avec succès",
+    "copySuccess": "Résultats copiés dans le presse-papier !",
+    "copyFailed": "Échec de la copie des résultats"
+  },
+  "share": {
+    "title": "Partager vNetscan",
+    "description": "Partagez cet outil puissant de diagnostic réseau avec vos collègues et aidez-les à analyser l'infrastructure réseau efficacement.",
+    "twitter": "Partager sur Twitter",
+    "linkedin": "Partager sur LinkedIn",
+    "whatsapp": "Partager sur WhatsApp",
+    "text": "Découvrez cet outil professionnel de diagnostic réseau vNetscan ! 🔍 Recherche IP complète, scan de ports, WHOIS et analyse traceroute. #DiagnosticRéseau #vNetscan"
+  },
+  "features": {
+    "title": "Pourquoi choisir vNetscan ?",
+    "subtitle": "Diagnostics réseau de niveau professionnel dans votre navigateur",
+    "speed": {
+      "title": "Ultra Rapide",
+      "description": "Résultats instantanés avec appels API optimisés et traitement efficace"
+    },
+    "security": {
+      "title": "Sécurisé et Privé",
+      "description": "Aucune journalisation, traitement côté client et connexions chiffrées"
+    },
+    "coverage": {
+      "title": "Couverture Mondiale",
+      "description": "Base de données IP mondiale complète avec données de géolocalisation précises"
+    },
+    "export": {
+      "title": "Prêt à Exporter",
+      "description": "Exportez les résultats en plusieurs formats pour rapports et analyses"
+    }
+  },
+  "footer": {
+    "poweredBy": "Alimenté par Visnec Nexus",
+    "description": "Outils professionnels de diagnostic réseau alimentés par Visnec Nexus. Analyse réseau fiable, rapide et complète.",
+    "links": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
+      "youtube": "YouTube",
+      "linkedin": "LinkedIn"
+    },
+    "quickLinks": {
+      "title": "Outils",
+      "ipLookup": "Recherche IP",
+      "portScan": "Scanner de Ports",
+      "whois": "Recherche WHOIS",
+      "traceroute": "Traceroute",
+      "geoInfo": "Géolocalisation"
+    },
+    "support": {
+      "title": "Support",
+      "help": "Centre d'Aide",
+      "contact": "Nous Contacter",
+      "privacy": "Politique de Confidentialité",
+      "terms": "Conditions d'Utilisation"
+    }
+  },
+  "errors": {
+    "noTarget": "Veuillez saisir une adresse IP ou un nom de domaine",
+    "scanInProgress": "Scan déjà en cours...",
+    "ipDetectionFailed": "Échec de la détection de votre adresse IP",
+    "connectionError": "Échec de la détection des informations IP. Veuillez vérifier votre connexion internet.",
+    "ipLookupFailed": "Échec de la recherche d'informations IP. Veuillez vérifier que la cible est correcte.",
+    "invalidTarget": "Adresse IP ou domaine invalide",
+    "unknownScanType": "Type de scan inconnu",
+    "scanFailed": "Échec du scan"
+  },
+  "status": {
+    "totalPorts": "Total Scannés",
+    "openPorts": "Ports Ouverts",
+    "closedPorts": "Ports Fermés",
+    "scanTime": "Temps de Scan",
+    "totalHops": "Total de Sauts",
+    "destination": "Destination",
+    "routeHops": "Sauts de Route"
+  },
+  "fields": {
+    "ip": "Adresse IP",
+    "version": "Version",
+    "city": "Ville",
+    "region": "Région",
+    "country": "Pays",
+    "timezone": "Fuseau Horaire",
+    "organization": "Organisation",
+    "org": "Organisation",
+    "asn": "ASN",
+    "postal": "Code Postal",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "utcOffset": "Décalage UTC",
+    "domain": "Domaine",
+    "registrar": "Registraire",
+    "registrationDate": "Date d'Enregistrement",
+    "expirationDate": "Date d'Expiration",
+    "nameServers": "Serveurs de Noms",
+    "status": "Statut",
+    "unknown": "Inconnu",
+    "coordinates": "Coordonnées",
+    "location": "Localisation"
+  },
+  "recentScans": "Analyses Récentes",
+  "noRecentScans": "Aucune analyse récente pour le moment.",
+  "limitTitle": "Limite Quotidienne d'Analyses Atteinte",
+  "limitText": "Vous avez utilisé toutes vos 5 analyses gratuites aujourd'hui. Passez au Pro pour des analyses illimitées.",
+  "goPro": "Passer Pro - 5,99$/mois",
+  "close": "Fermer"
+}

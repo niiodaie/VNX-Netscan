@@ -1,19 +1,10 @@
 User-agent: *
 Allow: /
 
-# Sitemap
-Sitemap: https://netscan.visnec.ai/sitemap.xml
+# Sitemap location
+Sitemap: https://vnetscan.vercel.app/sitemap.xml
 
-# Disallow admin and API endpoints
+# Common directories to exclude
 Disallow: /api/
-Disallow: /admin/
-
-# Allow specific tools for SEO
-Allow: /ip-lookup
-Allow: /port-scanner
-Allow: /whois
-Allow: /traceroute
-Allow: /geo-lookup
-
-# Crawl delay
-Crawl-delay: 1
+Disallow: /locales/
+Disallow: /assets/icons/

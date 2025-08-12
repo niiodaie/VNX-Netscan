@@ -1,0 +1,171 @@
+{
+  "app": {
+    "title": "vNetscan",
+    "subtitle": "Visnec Nexus - Diagnósticos de Red",
+    "description": "Herramienta profesional de diagnóstico de red para consulta de IP, escaneo de puertos, WHOIS y análisis de traceroute.",
+    "tagline": "Kit de Herramientas de Diagnóstico de Red"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "tools": "Herramientas",
+    "about": "Acerca de",
+    "contact": "Contacto"
+  },
+  "tools": {
+    "ipLookup": {
+      "name": "Consulta IP",
+      "description": "Información básica de IP",
+      "button": "Iniciar Consulta IP"
+    },
+    "geoInfo": {
+      "name": "Info Geo",
+      "description": "Detalles de ubicación y ISP",
+      "button": "Iniciar Info Geo"
+    },
+    "portScan": {
+      "name": "Escaneo de Puertos",
+      "description": "Verificar puertos abiertos",
+      "button": "Iniciar Escaneo de Puertos"
+    },
+    "whois": {
+      "name": "WHOIS",
+      "description": "Información de registro de dominio",
+      "button": "Iniciar WHOIS"
+    },
+    "traceroute": {
+      "name": "Traceroute",
+      "description": "Análisis de ruta de red",
+      "button": "Iniciar Traceroute"
+    },
+    "bulkScan": {
+      "name": "Escaneo Masivo",
+      "description": "Todas las herramientas a la vez",
+      "button": "Iniciar Escaneo Masivo"
+    }
+  },
+  "interface": {
+    "inputPlaceholder": "Ingrese dirección IP o nombre de dominio (ej: 8.8.8.8 o google.com)",
+    "scanMyIP": "Escanear Mi IP",
+    "clear": "Limpiar",
+    "exportResults": "Exportar Resultados",
+    "copyResults": "Copiar Resultados",
+    "clearResults": "Limpiar Resultados",
+    "scanning": "Escaneando",
+    "ready": "Listo para escanear",
+    "online": "En línea",
+    "enterTarget": "Ingrese objetivo primero"
+  },
+  "results": {
+    "title": "Resultados del Análisis",
+    "noResults": "No hay resultados para exportar",
+    "noResultsCopy": "No hay resultados para copiar",
+    "scanCompleted": "escaneos completados",
+    "scanFailed": "Escaneo fallido",
+    "exportSuccess": "Resultados exportados exitosamente",
+    "copySuccess": "¡Resultados copiados al portapapeles!",
+    "copyFailed": "Error al copiar resultados"
+  },
+  "share": {
+    "title": "Compartir vNetscan",
+    "description": "Comparte esta poderosa herramienta de diagnóstico de red con tus colegas y ayúdalos a analizar la infraestructura de red de manera eficiente.",
+    "twitter": "Compartir en Twitter",
+    "linkedin": "Compartir en LinkedIn",
+    "whatsapp": "Compartir en WhatsApp",
+    "text": "¡Mira esta herramienta profesional de diagnóstico de red de vNetscan! 🔍 Obtén consulta completa de IP, escaneo de puertos, WHOIS y análisis de traceroute. #DiagnósticosDeRed #vNetscan"
+  },
+  "features": {
+    "title": "¿Por qué elegir vNetscan?",
+    "subtitle": "Diagnósticos de red de grado profesional en tu navegador",
+    "speed": {
+      "title": "Súper Rápido",
+      "description": "Resultados instantáneos con llamadas API optimizadas y procesamiento eficiente"
+    },
+    "security": {
+      "title": "Seguro y Privado",
+      "description": "Sin registro de datos, procesamiento del lado del cliente y conexiones cifradas"
+    },
+    "coverage": {
+      "title": "Cobertura Global",
+      "description": "Base de datos IP global completa con datos de geolocalización precisos"
+    },
+    "export": {
+      "title": "Listo para Exportar",
+      "description": "Exporta resultados en múltiples formatos para informes y análisis"
+    }
+  },
+  "footer": {
+    "poweredBy": "Desarrollado por Visnec Nexus",
+    "description": "Herramientas profesionales de diagnóstico de red desarrolladas por Visnec Nexus. Análisis de red confiable, rápido y completo.",
+    "links": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
+      "youtube": "YouTube",
+      "linkedin": "LinkedIn"
+    },
+    "quickLinks": {
+      "title": "Herramientas",
+      "ipLookup": "Consulta IP",
+      "portScan": "Escáner de Puertos",
+      "whois": "Consulta WHOIS",
+      "traceroute": "Traceroute",
+      "geoInfo": "Geolocalización"
+    },
+    "support": {
+      "title": "Soporte",
+      "help": "Centro de Ayuda",
+      "contact": "Contáctanos",
+      "privacy": "Política de Privacidad",
+      "terms": "Términos de Servicio"
+    }
+  },
+  "errors": {
+    "noTarget": "Por favor ingrese una dirección IP o nombre de dominio",
+    "scanInProgress": "Escaneo ya en progreso...",
+    "ipDetectionFailed": "Error al detectar su dirección IP",
+    "connectionError": "Error al detectar información de IP. Por favor verifique su conexión a internet.",
+    "ipLookupFailed": "Error al consultar información de IP. Por favor verifique que el objetivo sea correcto.",
+    "invalidTarget": "Dirección IP o dominio inválido",
+    "unknownScanType": "Tipo de escaneo desconocido",
+    "scanFailed": "Escaneo fallido"
+  },
+  "status": {
+    "totalPorts": "Total Escaneados",
+    "openPorts": "Puertos Abiertos",
+    "closedPorts": "Puertos Cerrados",
+    "scanTime": "Tiempo de Escaneo",
+    "totalHops": "Total de Saltos",
+    "destination": "Destino",
+    "routeHops": "Saltos de Ruta"
+  },
+  "fields": {
+    "ip": "Dirección IP",
+    "version": "Versión",
+    "city": "Ciudad",
+    "region": "Región",
+    "country": "País",
+    "timezone": "Zona Horaria",
+    "organization": "Organización",
+    "org": "Organización",
+    "asn": "ASN",
+    "postal": "Código Postal",
+    "latitude": "Latitud",
+    "longitude": "Longitud",
+    "utcOffset": "Desplazamiento UTC",
+    "domain": "Dominio",
+    "registrar": "Registrador",
+    "registrationDate": "Fecha de Registro",
+    "expirationDate": "Fecha de Expiración",
+    "nameServers": "Servidores de Nombres",
+    "status": "Estado",
+    "unknown": "Desconocido",
+    "coordinates": "Coordenadas",
+    "location": "Ubicación"
+  },
+  "recentScans": "Escaneos Recientes",
+  "noRecentScans": "Aún no hay escaneos recientes.",
+  "limitTitle": "Límite Diario de Escaneos Alcanzado",
+  "limitText": "Has usado todos los 5 escaneos gratuitos de hoy. Actualiza a Pro para escaneo ilimitado.",
+  "goPro": "Ir Pro - $5.99/mes",
+  "close": "Cerrar"
+}
