@@ -69,7 +69,7 @@ VNX-Netscan/
 4. **Production Build**
    ```bash
    npm run build
-   ```
+   ``
 
 ## Deployment
 
