@@ -10,12 +10,16 @@ import Footer from '@/components/Footer'
 // Pages
 import Home from '@/pages/Home'
 import AuthSignIn from '@/pages/auth-sign-in'
+import AuthSignUp from '@/pages/auth-sign-up'
 import Profile from '@/pages/Profile'
 import Dashboard from '@/pages/Dashboard'
 import DemoDashboard from '@/pages/DemoDashboard'
 import Upgrade from '@/pages/Upgrade'
 import Support from '@/pages/Support'
 import NotFound from '@/pages/NotFound'
+
+// Auth guard
+import PrivateRoute from '@/components/PrivateRoute'
 
 function App() {
   return (
@@ -26,8 +30,15 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/sign-in" element={<AuthSignIn />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/sign-up" element={<AuthSignUp />} />
+            
+            {/* Protected routes */}
+            <Route element={<PrivateRoute />}>
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
+
+            {/* Public extras */}
             <Route path="/demo-dashboard" element={<DemoDashboard />} />
             <Route path="/demo" element={<DemoDashboard />} />
             <Route path="/upgrade" element={<Upgrade />} />
@@ -46,4 +57,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>,
 )
-
