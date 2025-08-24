@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://visprint.com/sitemap.xml
-
