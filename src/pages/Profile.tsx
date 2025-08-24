@@ -1,50 +1,66 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
+import { supabase } from '@/lib/supabaseClient'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { supabase } from '@/lib/supabaseClient'
-import { 
-  User, 
-  Mail, 
-  Calendar, 
-  Crown, 
-  Settings, 
+import {
+  User,
+  Mail,
+  Calendar,
+  Crown,
+  Settings,
   LogOut,
   Shield,
-  Activity
+  Activity,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
 
 export default function Profile() {
   const { session, ready } = useSession()
   const navigate = useNavigate()
+  const [verifying, setVerifying] = useState(true)
+  const [userEmailConfirmedAt, setUserEmailConfirmedAt] = useState<string | null>(null)
 
-  // Gentle guard - redirect after delay if not authenticated
+  // Gentle guard — wait for hydration; if no session after a short delay, redirect
   useEffect(() => {
     if (!ready) return
     if (session) return
-    
     const t = setTimeout(() => {
-      if (!session) {
-        navigate('/sign-in', { replace: true })
-      }
+      if (!session) navigate('/sign-in', { replace: true })
     }, 800)
-    
     return () => clearTimeout(t)
   }, [ready, session, navigate])
 
+  // Refresh user info once (ensures up-to-date email confirmation, metadata, etc.)
+  useEffect(() => {
+    let cancelled = false
+    const fetchUser = async () => {
+      if (!session) return
+      setVerifying(true)
+      const { data } = await supabase.auth.getUser()
+      if (!cancelled) {
+        setUserEmailConfirmedAt(data.user?.email_confirmed_at ?? null)
+        setVerifying(false)
+      }
+    }
+    fetchUser()
+    return () => {
+      cancelled = true
+    }
+  }, [session])
+
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    navigate('/')
+    navigate('/sign-in', { replace: true })
   }
 
   if (!ready) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     )
   }
@@ -54,13 +70,22 @@ export default function Profile() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-600 mb-4">Redirecting to sign in...</p>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
         </div>
       </div>
     )
   }
 
   const user = session.user
+  const fullName =
+    (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) ||
+    user.email?.split('@')[0] ||
+    'User'
+
+  const initial = (user.email?.charAt(0) || 'U').toUpperCase()
+  const joined = useMemo(() => new Date(user.created_at).toLocaleDateString(), [user.created_at])
+
+  const emailVerified = !!userEmailConfirmedAt
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -78,19 +103,24 @@ export default function Profile() {
               <Card className="shadow-lg border-0">
                 <CardHeader className="text-center">
                   <Avatar className="w-20 h-20 mx-auto mb-4">
-                    <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback className="text-lg">
-                      {user.email?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
+                    <AvatarImage src={user.user_metadata?.avatar_url || ''} alt={fullName} />
+                    <AvatarFallback className="text-lg">{initial}</AvatarFallback>
                   </Avatar>
                   <CardTitle className="flex items-center justify-center gap-2">
                     <User className="w-5 h-5" />
-                    {user.user_metadata?.full_name || 'User'}
+                    {fullName}
                   </CardTitle>
-                  <div className="flex justify-center">
-                    <Badge variant="secondary" className="mt-2">
-                      Free Plan
-                    </Badge>
+                  <div className="flex justify-center gap-2 mt-2">
+                    <Badge variant="secondary">Free Plan</Badge>
+                    {emailVerified ? (
+                      <Badge className="bg-green-100 text-green-700 border-green-200">
+                        Email Verified
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">
+                        Verify Email
+                      </Badge>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -100,12 +130,14 @@ export default function Profile() {
                   </div>
                   <div className="flex items-center gap-3 text-sm text-slate-600">
                     <Calendar className="w-4 h-4" />
-                    Joined {new Date(user.created_at).toLocaleDateString()}
+                    Joined {joined}
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600">
-                    <Shield className="w-4 h-4" />
-                    Email Verified
-                  </div>
+                  {verifying && (
+                    <div className="flex items-center gap-3 text-sm text-slate-600">
+                      <Shield className="w-4 h-4" />
+                      Checking verification…
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -149,19 +181,15 @@ export default function Profile() {
                       <h3 className="font-medium text-slate-800">Email Address</h3>
                       <p className="text-sm text-slate-600">{user.email}</p>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Change
-                    </Button>
+                    <Button variant="outline" size="sm">Change</Button>
                   </div>
-                  
+
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                     <div>
                       <h3 className="font-medium text-slate-800">Password</h3>
                       <p className="text-sm text-slate-600">••••••••</p>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Update
-                    </Button>
+                    <Button variant="outline" size="sm">Update</Button>
                   </div>
 
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
@@ -169,14 +197,12 @@ export default function Profile() {
                       <h3 className="font-medium text-slate-800">Two-Factor Authentication</h3>
                       <p className="text-sm text-slate-600">Add an extra layer of security</p>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Enable
-                    </Button>
+                    <Button variant="outline" size="sm">Enable</Button>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Usage Stats */}
+              {/* Usage Stats (placeholder) */}
               <Card className="shadow-lg border-0">
                 <CardHeader>
                   <CardTitle>Usage Statistics</CardTitle>
@@ -202,9 +228,9 @@ export default function Profile() {
               {/* Sign Out */}
               <Card className="shadow-lg border-0">
                 <CardContent className="pt-6">
-                  <Button 
+                  <Button
                     onClick={handleSignOut}
-                    variant="outline" 
+                    variant="outline"
                     className="w-full text-red-600 border-red-200 hover:bg-red-50"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
@@ -219,4 +245,3 @@ export default function Profile() {
     </div>
   )
 }
-
