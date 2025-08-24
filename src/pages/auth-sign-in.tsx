@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabaseClient'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, ArrowLeft } from 'lucide-react'
-import { Link } from 'react-router-dom'
 
 export default function AuthSignIn() {
   const [email, setEmail] = useState('')
@@ -17,52 +16,78 @@ export default function AuthSignIn() {
   const [callbackError, setCallbackError] = useState('')
   const navigate = useNavigate()
 
-  // Handle magic link callback
+  const appUrl = import.meta.env.VITE_PUBLIC_APP_URL as string
+
+  // show success banner if redirected from sign-up
+  const showCheckEmail = useMemo(() => {
+    const sp = new URLSearchParams(window.location.search)
+    return sp.get('check-email') === '1'
+  }, [])
+
+  // 0) If already signed in, go straight to /profile (prevents flicker/bounce)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase.auth.getSession()
+      if (!cancelled && data.session) {
+        navigate('/profile', { replace: true })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [navigate])
+
+  // 1) Handle magic-link callback (hash fragment -> exchange -> redirect)
   useEffect(() => {
     let unsub: (() => void) | undefined
+
     const run = async () => {
       const hash = window.location.hash || ''
-      const looksLikeMagic = hash.includes('access_token=') || hash.includes('type=magiclink') || hash.includes('provider_token=')
-      
+      const looksLikeMagic =
+        hash.includes('access_token=') ||
+        hash.includes('type=magiclink') ||
+        hash.includes('provider_token=')
+
       if (!looksLikeMagic) return
 
       try {
         const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
         if (error) throw error
 
-        // Clean up URL
+        // Clean up URL so refresh doesn't repeat exchange
         window.history.replaceState({}, '', '/sign-in')
-        
-        // Check session and redirect
+
+        // Check session immediately
         const { data } = await supabase.auth.getSession()
         if (data.session) {
           navigate('/profile', { replace: true })
           return
         }
 
-        // Listen for auth state changes
+        // Listen for auth state changes as a fallback
         const sub = supabase.auth.onAuthStateChange((e, s) => {
-          if (e === 'SIGNED_IN' && s) {
-            navigate('/profile', { replace: true })
-          }
+          if (e === 'SIGNED_IN' && s) navigate('/profile', { replace: true })
         })
         unsub = () => sub.data.subscription.unsubscribe()
 
-        // Fallback check after delay
+        // Final guard after a short delay
         setTimeout(async () => {
           const { data: again } = await supabase.auth.getSession()
-          if (again.session) {
-            navigate('/profile', { replace: true })
-          }
+          if (again.session) navigate('/profile', { replace: true })
         }, 800)
       } catch (e: any) {
         setCallbackError(e?.message || 'Link invalid or expired.')
       }
     }
+
     run()
-    return () => { if (unsub) unsub() }
+    return () => {
+      if (unsub) unsub()
+    }
   }, [navigate])
 
+  // 2) Send magic link
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -73,15 +98,14 @@ export default function AuthSignIn() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/sign-in`
-        }
+          // IMPORTANT: use canonical app URL so emails never point to the wrong origin
+          emailRedirectTo: `${appUrl}/sign-in`,
+        },
       })
-
       if (error) throw error
-
       setMessage('Check your email for the magic link!')
-    } catch (error: any) {
-      setError(error.message)
+    } catch (err: any) {
+      setError(err?.message ?? 'Unable to send magic link.')
     } finally {
       setLoading(false)
     }
@@ -107,6 +131,14 @@ export default function AuthSignIn() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {showCheckEmail && (
+              <Alert className="mb-4 border-blue-200 bg-blue-50">
+                <AlertDescription className="text-blue-700">
+                  Check your email to confirm your account, then click the link to sign in.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {callbackError && (
               <Alert className="mb-4 border-red-200 bg-red-50">
                 <AlertDescription className="text-red-700">
@@ -167,9 +199,9 @@ export default function AuthSignIn() {
 
             <div className="mt-6 text-center text-sm text-slate-600">
               <p>
-                Don't have an account?{' '}
-                <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
-                  Sign up here
+                Don&apos;t have an account?{' '}
+                <Link to="/sign-up" className="text-blue-600 hover:text-blue-700 font-medium">
+                  Create one here
                 </Link>
               </p>
             </div>
@@ -188,4 +220,3 @@ export default function AuthSignIn() {
     </div>
   )
 }
-
