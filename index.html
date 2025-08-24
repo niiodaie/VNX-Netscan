@@ -1,57 +1,65 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VisPrint – Custom Printing & Promotional Products</title>
-    <meta name="description" content="Professional custom printing services for apparel, drinkware, promotional items, and more. Get free mockups and competitive pricing for your brand." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>VNX-Netscan | Professional Network Diagnostics</title>
+    <meta name="description" content="Professional network diagnostic tool with SSL/TLS analysis, port scanning, IP lookup, WHOIS, and comprehensive network security monitoring" />
+    <meta name="keywords" content="network diagnostic, SSL analyzer, IP lookup, port scan, WHOIS, traceroute, network security, certificate analysis, VNX-Netscan" />
     
-    <!-- Open Graph / Facebook -->
+    <!-- Google AdSense Verification -->
+    <meta name="google-adsense-account" content="ca-pub-6074565478510564" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="VNX-Netscan | Professional Network Diagnostics" />
+    <meta property="og:description" content="Professional network diagnostic tool with SSL/TLS analysis, port scanning, IP lookup, WHOIS, and comprehensive network security monitoring" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://visprint.com/" />
-    <meta property="og:title" content="VisPrint – Custom Printing & Promotional Products" />
-    <meta property="og:description" content="Professional custom printing services for apparel, drinkware, promotional items, and more. Get free mockups and competitive pricing for your brand." />
-    <meta property="og:image" content="/og-cover.png" />
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://visprint.com/" />
-    <meta property="twitter:title" content="VisPrint – Custom Printing & Promotional Products" />
-    <meta property="twitter:description" content="Professional custom printing services for apparel, drinkware, promotional items, and more. Get free mockups and competitive pricing for your brand." />
-    <meta property="twitter:image" content="/og-cover.png" />
-
+    <meta property="og:url" content="https://netlookup.io" />
+    <meta property="og:image" content="https://netlookup.io/assets/vnx-logo.png" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="VNX-Netscan | Professional Network Diagnostics" />
+    <meta name="twitter:description" content="Professional SSL/TLS analysis, port scanning, IP lookup, and network security monitoring." />
+    <meta name="twitter:image" content="https://netlookup.io/assets/vnx-logo.png" />
+    
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="icon" type="image/png" href="/assets/icon.png" />
+    <link rel="apple-touch-icon" href="/assets/icon.png" />
     
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://visprint.com/" />
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0f172a" />
     
-    <!-- Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "VisPrint",
-      "url": "https://visprint.com",
-      "logo": "https://visprint.com/logo.svg",
-      "description": "Professional custom printing services for apparel, drinkware, promotional items, and more.",
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "+1-800-123-4567",
-        "contactType": "customer service",
-        "email": "info@visprint.com"
-      },
-      "sameAs": [
-        "https://twitter.com/visprint",
-        "https://facebook.com/visprint",
-        "https://linkedin.com/company/visprint"
-      ]
-    }
+    <!-- Service Worker - Temporarily disabled for admin console testing -->
+    <script>
+      // Service worker disabled to prevent navigation interference
+      console.log('Service worker registration disabled for debugging');
     </script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DXLS10MB0D"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DXLS10MB0D');
+    </script>
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6074565478510564"
+         crossorigin="anonymous"></script>
+    
+    <!-- Plausible Analytics -->
+    <script defer data-domain="netlookup.io" src="https://plausible.io/js/script.js"></script>
   </head>
-  <body class="min-h-screen bg-neutral-50">
+  <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main-simple.tsx"></script>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>
 </html>
-
