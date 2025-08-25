@@ -1,3 +1,4 @@
+// FILE: src/pages/Profile.tsx
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
@@ -21,29 +22,16 @@ import {
   Activity,
 } from 'lucide-react'
 
-
-export default function Profile() {
-  const { session, ready } = useSession()
-  const { verifying, emailVerified, refresh } = useEmailVerified(session)
-
-
 export default function Profile() {
   const { session, ready } = useSession()
   const navigate = useNavigate()
 
-  
-  const [verifying, setVerifying] = useState(true)
-  const [userEmailConfirmedAt, setUserEmailConfirmedAt] = useState<string | null>(null)
+  // Centralized email verification state
+  const { verifying, emailVerified, refresh } = useEmailVerified(session)
+
+  // One-time auto-resend status
   const [autoResendOk, setAutoResendOk] = useState<string | null>(null)
   const [autoResendErr, setAutoResendErr] = useState<string | null>(null)
-
-  const handleResend = async () => {
-    if (!session?.user?.email) return
-    const result = await resendVerificationEmail(session.user.email)
-    if (result.ok) {
-      console.log('Verification email sent')
-    } else {
-      console.error(result.error)
 
   // If no session after a small delay, go to /sign-in
   useEffect(() => {
@@ -55,27 +43,10 @@ export default function Profile() {
     return () => clearTimeout(t)
   }, [ready, session, navigate])
 
-  // Refresh the user object once to get latest email_confirmed_at & metadata
-  useEffect(() => {
-    let cancelled = false
-    const run = async () => {
-      if (!session) return
-      setVerifying(true)
-      const { data } = await supabase.auth.getUser()
-      if (!cancelled) {
-        setUserEmailConfirmedAt(data.user?.email_confirmed_at ?? null)
-        setVerifying(false)
-      }
-    }
-    run()
-    return () => { cancelled = true }
-  }, [session])
-
-  // Auto-resend once per browser session if unverified
+  // Auto-resend *once per browser session* if user is unverified
   useEffect(() => {
     const email = session?.user?.email
     if (!email || !session) return
-    const emailVerified = !!userEmailConfirmedAt
     if (emailVerified) return
 
     const key = `nl_auto_resend_${session.user.id}`
@@ -97,7 +68,19 @@ export default function Profile() {
         sessionStorage.setItem(key, '1')
       }
     })()
-  }, [session, userEmailConfirmedAt])
+  }, [session, emailVerified])
+
+  const handleManualResend = async () => {
+    if (!session?.user?.email) return
+    const result = await resendVerificationEmail(session.user.email)
+    if (result.ok) {
+      setAutoResendOk('Verification email sent.')
+      setAutoResendErr(null)
+    } else {
+      setAutoResendErr(result.error ?? 'Unable to send verification email.')
+      setAutoResendOk(null)
+    }
+  }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -130,7 +113,6 @@ export default function Profile() {
     'User'
   const initial = (user.email?.charAt(0) || 'U').toUpperCase()
   const joined = useMemo(() => new Date(user.created_at).toLocaleDateString(), [user.created_at])
-  const emailVerified = !!userEmailConfirmedAt
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -155,10 +137,15 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Email verification banner (manual resend) */}
+          {/* Email verification banner (with manual resend) */}
           {!emailVerified && (
             <div className="mb-6">
-              <EmailVerifyBanner email={user.email!} redirectPath="/sign-in" />
+              <EmailVerifyBanner
+                email={user.email!}
+                redirectPath="/sign-in"
+                onResend={handleManualResend}
+                onRefresh={refresh}
+              />
             </div>
           )}
 
