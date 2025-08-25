@@ -1,4 +1,4 @@
- // FILE: src/pages/Profile.tsx
+// FILE: src/pages/Profile.tsx
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
@@ -19,7 +19,8 @@ import {
   Activity,
 } from 'lucide-react'
 
-{!emailVerified && <EmailVerifyBanner email={user.email!} />}
+// If you have a banner component, import it. Otherwise, delete this and use the inline banner below.
+// import EmailVerifyBanner from '@/components/profile/EmailVerifyBanner'
 
 export default function Profile() {
   const { session, ready } = useSession()
@@ -86,17 +87,37 @@ export default function Profile() {
     'User'
   const initial = (user.email?.charAt(0) || 'U').toUpperCase()
   const joined = useMemo(() => new Date(user.created_at).toLocaleDateString(), [user.created_at])
-  const emailVerified = !!userEmailConfirmedAt
+
+  // More robust verification (covers different providers/fields)
+  const emailVerified =
+    !!userEmailConfirmedAt ||
+    !!(user as any)?.confirmed_at ||
+    !!user.user_metadata?.email_verified
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-slate-800 mb-2">Profile</h1>
             <p className="text-slate-600">Manage your account and preferences</p>
           </div>
+
+          {/* Place the email verification banner *inside* the component render */}
+          {!emailVerified && (
+            // If you have a dedicated component, render it here instead of this block:
+            // <EmailVerifyBanner email={user.email!} />
+            <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                <span>
+                  Please verify your email address <strong>{user.email}</strong> to unlock all features.
+                  Check your inbox for the confirmation link.
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Profile Card */}
