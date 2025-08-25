@@ -22,6 +22,44 @@ import {
 
 // If you have a banner component, import it. Otherwise, delete this and use the inline banner below.
 // import EmailVerifyBanner from '@/components/profile/EmailVerifyBanner'
+// Add near other state
+const [autoResendOk, setAutoResendOk] = useState<string | null>(null)
+const [autoResendErr, setAutoResendErr] = useState<string | null>(null)
+
+// Automatically resend once per browser session if user is not verified
+useEffect(() => {
+  // Need a session and an email to proceed
+  const email = session?.user?.email
+  if (!email || emailVerified) return
+
+  // per-session guard — only try once per user per browser session
+  const key = `nl_auto_resend_${session.user.id}`
+  if (sessionStorage.getItem(key)) return
+
+  ;(async () => {
+    try {
+      const appUrl =
+        import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${appUrl}/sign-in`,
+        },
+      })
+
+      if (error) throw error
+      setAutoResendOk('We sent you a fresh verification email.')
+      sessionStorage.setItem(key, '1')
+    } catch (e: any) {
+      setAutoResendErr(e?.message ?? 'Could not send verification email.')
+      sessionStorage.setItem(key, '1') // also set to avoid loops on errors
+    }
+  })()
+}, [emailVerified, session?.user?.email])
+
+
 
 {!emailVerified && (
   <div className="mb-6">
