@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
 import { supabase } from '@/lib/supabaseClient'
-
+import UsernameField from '@/components/profile/UsernameField'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
