@@ -1,3 +1,4 @@
+import AuthCallback from '@/pages/AuthCallback'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
@@ -31,6 +32,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/sign-in" element={<AuthSignIn />} />
             <Route path="/sign-up" element={<AuthSignUp />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             
             {/* Protected routes */}
             <Route element={<PrivateRoute />}>
