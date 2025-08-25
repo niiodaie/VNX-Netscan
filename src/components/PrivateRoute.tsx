@@ -1,4 +1,5 @@
-import { Navigate, Outlet } from 'react-router-dom'
+// components/PrivateRoute.tsx
+import { Outlet, Navigate } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
 
 export default function PrivateRoute() {
