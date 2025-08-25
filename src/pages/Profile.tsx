@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useEmailVerified } from '@/hooks/useEmailVerified'
+import { resendVerificationEmail } from '@/lib/auth'
 import {
   User,
   Mail,
@@ -19,14 +21,29 @@ import {
   Activity,
 } from 'lucide-react'
 
+
+export default function Profile() {
+  const { session, ready } = useSession()
+  const { verifying, emailVerified, refresh } = useEmailVerified(session)
+
+
 export default function Profile() {
   const { session, ready } = useSession()
   const navigate = useNavigate()
 
+  
   const [verifying, setVerifying] = useState(true)
   const [userEmailConfirmedAt, setUserEmailConfirmedAt] = useState<string | null>(null)
   const [autoResendOk, setAutoResendOk] = useState<string | null>(null)
   const [autoResendErr, setAutoResendErr] = useState<string | null>(null)
+
+  const handleResend = async () => {
+    if (!session?.user?.email) return
+    const result = await resendVerificationEmail(session.user.email)
+    if (result.ok) {
+      console.log('Verification email sent')
+    } else {
+      console.error(result.error)
 
   // If no session after a small delay, go to /sign-in
   useEffect(() => {
