@@ -3,6 +3,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
+import AuthCallback from '@/pages/AuthCallback'
 
 // Layout Components
 import Header from '@/components/Header'
