@@ -89,31 +89,29 @@ export default function AuthSignIn() {
 
   // 2) Send magic link
   const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    setMessage('')
+  e.preventDefault()
+  setLoading(true)
+  setError('')
+  setMessage('')
 
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          // IMPORTANT: use canonical app URL so emails never point to the wrong origin
-          const redirect = `${import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin}/auth/callback`
+  try {
+    // IMPORTANT: use canonical app URL so emails never point to the wrong origin
+    const appUrl = import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
+    const redirect = `${appUrl}/auth/callback`
 
-          await supabase.auth.signInWithOtp({
-            email,
-          options: { emailRedirectTo: redirect }
-          })
+    await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirect }
+    })
 
-      if (error) throw error
-      setMessage('Check your email for the magic link!')
-    } catch (err: any) {
-      setError(err?.message ?? 'Unable to send magic link.')
-    } finally {
-      setLoading(false)
-    }
+    setMessage('Check your email for the magic link!')
+  } catch (err: any) {
+    setError(err?.message ?? 'Something went wrong.')
+  } finally {
+    setLoading(false)
   }
+}
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
