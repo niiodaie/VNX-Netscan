@@ -4,6 +4,7 @@ import SignIn from '@/pages/auth-sign-in'
 import SignUp from '@/pages/auth-sign-up'
 import Profile from '@/pages/Profile'
 import PrivateRoute from '@/components/PrivateRoute'
+import AuthCallback from '@/pages/AuthCallback'
 
 export default function App() {
   return (
@@ -12,7 +13,8 @@ export default function App() {
       <Route path="/sign-in" element={<SignIn />} />
       <Route path="/sign-up" element={<SignUp />} />
       <Route element={<PrivateRoute />}>
-        <Route path="/profile" element={<Profile />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       </Route>
     </Routes>
   )
