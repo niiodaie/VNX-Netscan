@@ -38,6 +38,7 @@ function App() {
             <Route element={<PrivateRoute />}>
               <Route path="/profile" element={<Profile />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
             </Route>
 
             {/* Public extras */}
