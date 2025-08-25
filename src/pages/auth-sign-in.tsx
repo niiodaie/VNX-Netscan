@@ -99,9 +99,12 @@ export default function AuthSignIn() {
         email,
         options: {
           // IMPORTANT: use canonical app URL so emails never point to the wrong origin
-          emailRedirectTo: `${appUrl}/sign-in`,
-        },
-      })
+          const redirect = `${import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin}/auth/callback`
+          await supabase.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: redirect }
+          })
+
       if (error) throw error
       setMessage('Check your email for the magic link!')
     } catch (err: any) {
