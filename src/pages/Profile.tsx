@@ -1,3 +1,4 @@
+ // FILE: src/pages/Profile.tsx
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
@@ -24,7 +25,7 @@ export default function Profile() {
   const [verifying, setVerifying] = useState(true)
   const [userEmailConfirmedAt, setUserEmailConfirmedAt] = useState<string | null>(null)
 
-  // Gentle guard — wait for hydration; if no session after a short delay, redirect
+  // Gentle guard — if no session after a brief pause, send to /sign-in
   useEffect(() => {
     if (!ready) return
     if (session) return
@@ -34,10 +35,10 @@ export default function Profile() {
     return () => clearTimeout(t)
   }, [ready, session, navigate])
 
-  // Refresh user info once (ensures up-to-date email confirmation, metadata, etc.)
+  // Refresh user once to reflect latest verification & metadata
   useEffect(() => {
     let cancelled = false
-    const fetchUser = async () => {
+    const run = async () => {
       if (!session) return
       setVerifying(true)
       const { data } = await supabase.auth.getUser()
@@ -46,7 +47,7 @@ export default function Profile() {
         setVerifying(false)
       }
     }
-    fetchUser()
+    run()
     return () => {
       cancelled = true
     }
@@ -81,10 +82,8 @@ export default function Profile() {
     (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) ||
     user.email?.split('@')[0] ||
     'User'
-
   const initial = (user.email?.charAt(0) || 'U').toUpperCase()
   const joined = useMemo(() => new Date(user.created_at).toLocaleDateString(), [user.created_at])
-
   const emailVerified = !!userEmailConfirmedAt
 
   return (
@@ -123,6 +122,7 @@ export default function Profile() {
                     )}
                   </div>
                 </CardHeader>
+
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-3 text-sm text-slate-600">
                     <Mail className="w-4 h-4" />
@@ -138,54 +138,23 @@ export default function Profile() {
                       Checking verification…
                     </div>
                   )}
-               <CardContent className="space-y-6">
-           <UsernameField userId={user.id} initial={(user as any).user_metadata?.username ?? undefined} />
-          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-           <div>
-         <h3 className="font-medium text-slate-800">Email Address</h3>
-      <p className="text-sm text-slate-600">{user.email}</p>
-    </div>
-    <Button variant="outline" size="sm">Change</Button>
-       </div>
-  {/* keep the rest (password / 2FA blocks) */}
-
+                </CardContent>
               </Card>
             </div>
 
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Quick Actions */}
+              {/* Username & account fields */}
               <Card className="shadow-lg border-0">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="w-5 h-5" />
-                    Quick Actions
-                  </CardTitle>
+                  <CardTitle>Account Details</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Link to="/dashboard">
-                      <Button className="w-full justify-start" variant="outline">
-                        <Activity className="w-4 h-4 mr-2" />
-                        Go to Dashboard
-                      </Button>
-                    </Link>
-                    <Link to="/upgrade">
-                      <Button className="w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
-                        <Crown className="w-4 h-4 mr-2" />
-                        Upgrade Plan
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+                <CardContent className="space-y-6">
+                  <UsernameField
+                    userId={user.id}
+                    initial={(user as any).user_metadata?.username ?? undefined}
+                  />
 
-              {/* Account Settings */}
-              <Card className="shadow-lg border-0">
-                <CardHeader>
-                  <CardTitle>Account Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                     <div>
                       <h3 className="font-medium text-slate-800">Email Address</h3>
@@ -208,6 +177,32 @@ export default function Profile() {
                       <p className="text-sm text-slate-600">Add an extra layer of security</p>
                     </div>
                     <Button variant="outline" size="sm">Enable</Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <Card className="shadow-lg border-0">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="w-5 h-5" />
+                    Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Link to="/dashboard">
+                      <Button className="w-full justify-start" variant="outline">
+                        <Activity className="w-4 h-4 mr-2" />
+                        Go to Dashboard
+                      </Button>
+                    </Link>
+                    <Link to="/upgrade">
+                      <Button className="w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
+                        <Crown className="w-4 h-4 mr-2" />
+                        Upgrade Plan
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
