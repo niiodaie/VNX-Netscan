@@ -19,6 +19,8 @@ import {
   Activity,
 } from 'lucide-react'
 
+{!emailVerified && <EmailVerifyBanner email={user.email!} />}
+
 export default function Profile() {
   const { session, ready } = useSession()
   const navigate = useNavigate()
