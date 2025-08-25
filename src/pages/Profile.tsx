@@ -1,14 +1,13 @@
-// FILE: src/pages/Profile.tsx
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
 import { supabase } from '@/lib/supabaseClient'
 import UsernameField from '@/components/profile/UsernameField'
+import EmailVerifyBanner from '@/components/profile/EmailVerifyBanner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import EmailVerifyBanner from '@/components/profile/EmailVerifyBanner'
 import {
   User,
   Mail,
@@ -20,63 +19,16 @@ import {
   Activity,
 } from 'lucide-react'
 
-// If you have a banner component, import it. Otherwise, delete this and use the inline banner below.
-// import EmailVerifyBanner from '@/components/profile/EmailVerifyBanner'
-// Add near other state
-const [autoResendOk, setAutoResendOk] = useState<string | null>(null)
-const [autoResendErr, setAutoResendErr] = useState<string | null>(null)
-
-// Automatically resend once per browser session if user is not verified
-useEffect(() => {
-  // Need a session and an email to proceed
-  const email = session?.user?.email
-  if (!email || emailVerified) return
-
-  // per-session guard — only try once per user per browser session
-  const key = `nl_auto_resend_${session.user.id}`
-  if (sessionStorage.getItem(key)) return
-
-  ;(async () => {
-    try {
-      const appUrl =
-        import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
-
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-        options: {
-          emailRedirectTo: `${appUrl}/sign-in`,
-        },
-      })
-
-      if (error) throw error
-      setAutoResendOk('We sent you a fresh verification email.')
-      sessionStorage.setItem(key, '1')
-    } catch (e: any) {
-      setAutoResendErr(e?.message ?? 'Could not send verification email.')
-      sessionStorage.setItem(key, '1') // also set to avoid loops on errors
-    }
-  })()
-}, [emailVerified, session?.user?.email])
-
-
-
-{!emailVerified && (
-  <div className="mb-6">
-    <EmailVerifyBanner email={user.email!} redirectPath="/sign-in" />
-  </div>
-)}
-
-
 export default function Profile() {
   const { session, ready } = useSession()
   const navigate = useNavigate()
+
   const [verifying, setVerifying] = useState(true)
   const [userEmailConfirmedAt, setUserEmailConfirmedAt] = useState<string | null>(null)
+  const [autoResendOk, setAutoResendOk] = useState<string | null>(null)
+  const [autoResendErr, setAutoResendErr] = useState<string | null>(null)
 
-  
-
-  // Gentle guard — if no session after a brief pause, send to /sign-in
+  // If no session after a small delay, go to /sign-in
   useEffect(() => {
     if (!ready) return
     if (session) return
@@ -86,7 +38,7 @@ export default function Profile() {
     return () => clearTimeout(t)
   }, [ready, session, navigate])
 
-  // Refresh user once to reflect latest verification & metadata
+  // Refresh the user object once to get latest email_confirmed_at & metadata
   useEffect(() => {
     let cancelled = false
     const run = async () => {
@@ -99,10 +51,36 @@ export default function Profile() {
       }
     }
     run()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [session])
+
+  // Auto-resend once per browser session if unverified
+  useEffect(() => {
+    const email = session?.user?.email
+    if (!email || !session) return
+    const emailVerified = !!userEmailConfirmedAt
+    if (emailVerified) return
+
+    const key = `nl_auto_resend_${session.user.id}`
+    if (sessionStorage.getItem(key)) return
+
+    ;(async () => {
+      try {
+        const appUrl = import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
+        const { error } = await supabase.auth.resend({
+          type: 'signup',
+          email,
+          options: { emailRedirectTo: `${appUrl}/sign-in` },
+        })
+        if (error) throw error
+        setAutoResendOk('We sent you a fresh verification email.')
+        sessionStorage.setItem(key, '1')
+      } catch (e: any) {
+        setAutoResendErr(e?.message ?? 'Could not send verification email.')
+        sessionStorage.setItem(key, '1')
+      }
+    })()
+  }, [session, userEmailConfirmedAt])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -135,12 +113,7 @@ export default function Profile() {
     'User'
   const initial = (user.email?.charAt(0) || 'U').toUpperCase()
   const joined = useMemo(() => new Date(user.created_at).toLocaleDateString(), [user.created_at])
-
-  // More robust verification (covers different providers/fields)
-  const emailVerified =
-    !!userEmailConfirmedAt ||
-    !!(user as any)?.confirmed_at ||
-    !!user.user_metadata?.email_verified
+  const emailVerified = !!userEmailConfirmedAt
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -152,18 +125,23 @@ export default function Profile() {
             <p className="text-slate-600">Manage your account and preferences</p>
           </div>
 
-          {/* Place the email verification banner *inside* the component render */}
+          {/* Auto-resend status (only if unverified) */}
+          {!emailVerified && (autoResendOk || autoResendErr) && (
+            <div
+              className={`mb-4 rounded-lg border px-4 py-3 ${
+                autoResendOk
+                  ? 'border-green-200 bg-green-50 text-green-800'
+                  : 'border-red-200 bg-red-50 text-red-800'
+              }`}
+            >
+              {autoResendOk ?? autoResendErr}
+            </div>
+          )}
+
+          {/* Email verification banner (manual resend) */}
           {!emailVerified && (
-            // If you have a dedicated component, render it here instead of this block:
-            // <EmailVerifyBanner email={user.email!} />
-            <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                <span>
-                  Please verify your email address <strong>{user.email}</strong> to unlock all features.
-                  Check your inbox for the confirmation link.
-                </span>
-              </div>
+            <div className="mb-6">
+              <EmailVerifyBanner email={user.email!} redirectPath="/sign-in" />
             </div>
           )}
 
@@ -215,7 +193,7 @@ export default function Profile() {
 
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Username & account fields */}
+              {/* Account Details */}
               <Card className="shadow-lg border-0">
                 <CardHeader>
                   <CardTitle>Account Details</CardTitle>
