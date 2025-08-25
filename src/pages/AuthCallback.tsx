@@ -8,25 +8,22 @@ export default function AuthCallback() {
 
   useEffect(() => {
     let cancelled = false
-
-    (async () => {
-      // Supabase puts tokens in the hash (/#access_token=…)
-      // Exchange the whole URL for a session
+    ;(async () => {
       const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
       if (cancelled) return
 
       if (error) {
         setError(error.message || 'Link invalid or expired.')
-        // send them back to sign-in after a short pause
         setTimeout(() => navigate('/sign-in', { replace: true }), 1500)
         return
       }
 
-      // SUCCESS: replace URL to /profile (removes auth hash too)
+      // Success → go to profile
       navigate('/profile', { replace: true })
     })()
-
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [navigate])
 
   return (
