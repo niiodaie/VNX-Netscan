@@ -138,7 +138,17 @@ export default function Profile() {
                       Checking verification…
                     </div>
                   )}
-                </CardContent>
+               <CardContent className="space-y-6">
+           <UsernameField userId={user.id} initial={(user as any).user_metadata?.username ?? undefined} />
+          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+           <div>
+         <h3 className="font-medium text-slate-800">Email Address</h3>
+      <p className="text-sm text-slate-600">{user.email}</p>
+    </div>
+    <Button variant="outline" size="sm">Change</Button>
+       </div>
+  {/* keep the rest (password / 2FA blocks) */}
+
               </Card>
             </div>
 
