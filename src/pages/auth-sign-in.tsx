@@ -100,8 +100,9 @@ export default function AuthSignIn() {
         options: {
           // IMPORTANT: use canonical app URL so emails never point to the wrong origin
           const redirect = `${import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin}/auth/callback`
+
           await supabase.auth.signInWithOtp({
-          email,
+            email,
           options: { emailRedirectTo: redirect }
           })
 
