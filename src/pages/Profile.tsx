@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import EmailVerifyBanner from '@/components/profile/EmailVerifyBanner'
 import {
   User,
   Mail,
@@ -22,11 +23,20 @@ import {
 // If you have a banner component, import it. Otherwise, delete this and use the inline banner below.
 // import EmailVerifyBanner from '@/components/profile/EmailVerifyBanner'
 
+{!emailVerified && (
+  <div className="mb-6">
+    <EmailVerifyBanner email={user.email!} redirectPath="/sign-in" />
+  </div>
+)}
+
+
 export default function Profile() {
   const { session, ready } = useSession()
   const navigate = useNavigate()
   const [verifying, setVerifying] = useState(true)
   const [userEmailConfirmedAt, setUserEmailConfirmedAt] = useState<string | null>(null)
+
+  
 
   // Gentle guard — if no session after a brief pause, send to /sign-in
   useEffect(() => {
