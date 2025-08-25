@@ -1,48 +1,57 @@
-// FILE: src/pages/AuthCallback.tsx
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabaseClient'
 
+function parseHashTokens(hash: string) {
+  const p = new URLSearchParams(hash.replace(/^#/, ''))
+  const access_token = p.get('access_token') || undefined
+  const refresh_token = p.get('refresh_token') || undefined
+  return { access_token, refresh_token }
+}
+
 export default function AuthCallback() {
   const navigate = useNavigate()
-  const [err, setErr] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     (async () => {
       try {
-        // Supabase sends tokens in the hash fragment (#...), so pass the full URL
-        const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
-        if (error) throw error
+        const href = window.location.href
+        const hasHash = window.location.hash.includes('access_token')
 
-        // Clean the URL (no tokens) and go to profile
+        if (hasHash) {
+          // Handle magic-link/hash tokens
+          const { access_token, refresh_token } = parseHashTokens(window.location.hash)
+          if (!access_token || !refresh_token) throw new Error('Missing tokens in hash')
+          const { error } = await supabase.auth.setSession({ access_token, refresh_token })
+          if (error) throw error
+        } else {
+          // Handle PKCE ?code=...
+          const { error } = await supabase.auth.exchangeCodeForSession(href)
+          if (error) throw error
+        }
+
+        // Clean URL and move on
         window.history.replaceState({}, '', '/')
         navigate('/profile', { replace: true })
       } catch (e: any) {
-        setErr(e?.message ?? 'Sign-in link is invalid or expired.')
+        setError(e?.message ?? 'Authentication failed')
       }
     })()
   }, [navigate])
 
-  if (err) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="p-6 rounded-lg border bg-white shadow-sm max-w-md text-center">
-          <h1 className="text-lg font-semibold mb-2">Couldn’t complete sign-in</h1>
-          <p className="text-slate-600 mb-4">{err}</p>
-          <a
-            className="inline-block px-4 py-2 rounded-md bg-blue-600 text-white"
-            href="/sign-in"
-          >
-            Try again
-          </a>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="rounded-lg border px-6 py-4">
+        {error ? (
+          <>
+            <div className="text-red-600 font-semibold mb-2">Couldn’t complete sign-in</div>
+            <div className="text-sm text-slate-600">{String(error)}</div>
+          </>
+        ) : (
+          <div className="text-slate-700">Finishing sign-in…</div>
+        )}
+      </div>
     </div>
   )
 }
