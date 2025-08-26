@@ -1,4 +1,4 @@
-// FILE: src/pages/AuthCallback.tsx
+// src/pages/AuthCallback.tsx
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabaseClient'
@@ -8,16 +8,17 @@ import { Loader2 } from 'lucide-react'
 
 export default function AuthCallback() {
   const navigate = useNavigate()
-  const [status, setStatus] = useState<'working'|'ok'|'error'|'empty'>('working')
-  const [message, setMessage] = useState<string>('')
+  const [state, setState] = useState<'working'|'empty'|'ok'|'error'>('working')
+  const [msg, setMsg] = useState('')
 
   useEffect(() => {
     const run = async () => {
       const href = window.location.href
-      const hasParams = href.includes('code=') || href.includes('access_token=') || href.includes('provider_token=')
+      const hasMagic = href.includes('access_token=')
+      const hasOAuth = href.includes('code=')
 
-      if (!hasParams) {
-        setStatus('empty')
+      if (!hasMagic && !hasOAuth) {
+        setState('empty')
         return
       }
 
@@ -25,39 +26,38 @@ export default function AuthCallback() {
         const { error } = await supabase.auth.exchangeCodeForSession(href)
         if (error) throw error
 
-        // Clean the URL so refresh doesn't repeat the exchange
+        // Clean URL so refresh doesn't redo the exchange
         window.history.replaceState({}, '', '/auth/callback')
 
-        // Confirm session, then go
+        // Make sure we actually have a session then go
         const { data } = await supabase.auth.getSession()
         if (data.session) {
-          setStatus('ok')
+          setState('ok')
           navigate('/profile', { replace: true })
           return
         }
 
-        // final safety net
+        // Last safety check
         setTimeout(async () => {
           const { data: again } = await supabase.auth.getSession()
           if (again.session) navigate('/profile', { replace: true })
           else {
-            setStatus('error')
-            setMessage('Could not complete sign-in. Please try again.')
+            setState('error')
+            setMsg('Could not complete sign-in. Please try again.')
           }
         }, 600)
       } catch (e: any) {
-        setStatus('error')
-        setMessage(e?.message ?? 'Could not complete sign-in. Please try again.')
+        setState('error')
+        setMsg(e?.message ?? 'Could not complete sign-in. Please try again.')
       }
     }
-
     run()
   }, [navigate])
 
-  if (status === 'working') {
+  if (state === 'working') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-600">
+        <div className="flex items-center gap-2 text-slate-600">
           <Loader2 className="w-5 h-5 animate-spin" />
           Completing sign-in…
         </div>
@@ -65,7 +65,7 @@ export default function AuthCallback() {
     )
   }
 
-  if (status === 'ok') return null
+  if (state === 'ok') return null
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -75,9 +75,9 @@ export default function AuthCallback() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-slate-600">
-            {status === 'empty'
+            {state === 'empty'
               ? 'This page expects a sign-in code or token, but none was found in the URL.'
-              : message || 'Something went wrong.'}
+              : msg || 'Something went wrong.'}
           </p>
           <Button asChild className="w-full">
             <Link to="/sign-in">Try again</Link>
