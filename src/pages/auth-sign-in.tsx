@@ -15,6 +15,16 @@ export default function AuthSignIn() {
   const [error, setError] = useState('')
   const [callbackError, setCallbackError] = useState('')
   const navigate = useNavigate()
+  const [pwEmail, setPwEmail] = useState('')
+  const [pw, setPw] = useState('')
+  const [pwLoading, setPwLoading] = useState(false)
+
+  // NEW: reset password state
+const [showReset, setShowReset] = useState(false)
+const [resetEmail, setResetEmail] = useState('')
+const [resetLoading, setResetLoading] = useState(false)
+const [resetMsg, setResetMsg] = useState<string | null>(null)
+const [resetErr, setResetErr] = useState<string | null>(null)
 
   const appUrl = import.meta.env.VITE_PUBLIC_APP_URL as string
 
@@ -93,6 +103,48 @@ export default function AuthSignIn() {
   setLoading(true)
   setError('')
   setMessage('')
+
+    // Existing password sign-in handler (you may already have this)
+const handlePasswordSignIn = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setError('')
+  setMessage('')
+  setPwLoading(true)
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: pwEmail,
+      password: pw,
+    })
+    if (error) throw error
+    navigate('/profile', { replace: true })
+  } catch (err: any) {
+    setError(err?.message ?? 'Could not sign in with password.')
+  } finally {
+    setPwLoading(false)
+  }
+}
+
+    
+    // Existing password sign-in handler (you may already have this)
+const handlePasswordSignIn = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setError('')
+  setMessage('')
+  setPwLoading(true)
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: pwEmail,
+      password: pw,
+    })
+    if (error) throw error
+    navigate('/profile', { replace: true })
+  } catch (err: any) {
+    setError(err?.message ?? 'Could not sign in with password.')
+  } finally {
+    setPwLoading(false)
+  }
+}
+
 
   try {
     // IMPORTANT: use canonical app URL so emails never point to the wrong origin
@@ -207,6 +259,75 @@ export default function AuthSignIn() {
                 </Link>
               </p>
             </div>
+
+            {/* Forgot Password link */}
+<div className="mt-3 text-right">
+  <button
+    type="button"
+    onClick={() => {
+      setShowReset((s) => !s)
+      // pre-fill with whatever the user typed above if available
+      if (!resetEmail && pwEmail) setResetEmail(pwEmail)
+    }}
+    className="text-sm text-blue-600 hover:text-blue-700"
+  >
+    {showReset ? 'Hide password reset' : 'Forgot password?'}
+  </button>
+</div>
+
+{/* Reset Password Panel */}
+{showReset && (
+  <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+    <p className="text-sm text-slate-700 mb-3">
+      We’ll email you a link to reset your password.
+    </p>
+
+    {resetMsg && (
+      <Alert className="mb-3 border-green-200 bg-green-50">
+        <AlertDescription className="text-green-700">{resetMsg}</AlertDescription>
+      </Alert>
+    )}
+    {resetErr && (
+      <Alert className="mb-3 border-red-200 bg-red-50">
+        <AlertDescription className="text-red-700">{resetErr}</AlertDescription>
+      </Alert>
+    )}
+
+    <form onSubmit={handleResetPassword} className="space-y-3">
+      <div>
+        <Label htmlFor="reset-email">Email Address</Label>
+        <Input
+          id="reset-email"
+          type="email"
+          value={resetEmail}
+          onChange={(e) => setResetEmail(e.target.value)}
+          placeholder="you@example.com"
+          required
+          disabled={resetLoading}
+          className="mt-1"
+        />
+      </div>
+      <Button type="submit" disabled={resetLoading}>
+        {resetLoading ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Sending…
+          </>
+        ) : (
+          'Send Reset Link'
+        )}
+      </Button>
+    </form>
+
+    <p className="mt-2 text-xs text-slate-500">
+      Follow the link in your email; you’ll be routed back here and signed into a recovery session.
+      Then set your new password on your Profile page.
+    </p>
+  </div>
+)}
+
+
+            
           </CardContent>
         </Card>
 
