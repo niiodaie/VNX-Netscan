@@ -6,37 +6,37 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, ArrowLeft, Lock } from 'lucide-react'
+import { Loader2, Mail, Lock, ArrowLeft } from 'lucide-react'
+
+type Mode = 'magic' | 'password'
 
 export default function AuthSignIn() {
-  // --- Magic-link state ---
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
-  const [callbackError, setCallbackError] = useState('')
+  const navigate = useNavigate()
 
-  // --- Password sign-in state (optional) ---
+  const [mode, setMode] = useState<Mode>('magic')
+
+  // Magic link
+  const [email, setEmail] = useState('')
+  const [mlLoading, setMlLoading] = useState(false)
+  const [mlMessage, setMlMessage] = useState('')
+  const [mlError, setMlError] = useState('')
+
+  // Password sign in
   const [pwEmail, setPwEmail] = useState('')
   const [pw, setPw] = useState('')
   const [pwLoading, setPwLoading] = useState(false)
+  const [pwError, setPwError] = useState('')
 
-  // --- Reset password state ---
-  const [showReset, setShowReset] = useState(false)
-  const [resetEmail, setResetEmail] = useState('')
-  const [resetLoading, setResetLoading] = useState(false)
-  const [resetMsg, setResetMsg] = useState<string | null>(null)
-  const [resetErr, setResetErr] = useState<string | null>(null)
+  // Errors from callback exchange (if the user hits this page with a broken link)
+  const [callbackError, setCallbackError] = useState('')
 
-  const navigate = useNavigate()
-
-  // show success banner if redirected from sign-up
+  // For the “redirected from sign-up: check your email” banner
   const showCheckEmail = useMemo(() => {
     const sp = new URLSearchParams(window.location.search)
     return sp.get('check-email') === '1'
   }, [])
 
-  // If already signed in, go straight to /profile
+  // If already signed in, go to /profile
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -50,78 +50,61 @@ export default function AuthSignIn() {
     }
   }, [navigate])
 
-  // Handle magic-link callback (hash fragment -> exchange -> redirect)
+  // If someone comes here with a hash that *should* be handled by /auth/callback,
+  // try to exchange (this makes the page resilient if the email template points here).
   useEffect(() => {
-    let unsub: (() => void) | undefined
+    const h = window.location.hash || ''
+    const looksLikeMagic =
+      h.includes('access_token=') ||
+      h.includes('type=magiclink') ||
+      h.includes('provider_token=') ||
+      h.includes('code=')
 
-    const run = async () => {
-      const hash = window.location.hash || ''
-      const looksLikeMagic =
-        hash.includes('access_token=') ||
-        hash.includes('type=magiclink') ||
-        hash.includes('provider_token=')
+    if (!looksLikeMagic) return
 
-      if (!looksLikeMagic) return
-
+    ;(async () => {
       try {
         const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
         if (error) throw error
-
-        // clean URL so refresh doesn't repeat exchange
         window.history.replaceState({}, '', '/sign-in')
-
         const { data } = await supabase.auth.getSession()
         if (data.session) {
           navigate('/profile', { replace: true })
-          return
         }
-
-        const sub = supabase.auth.onAuthStateChange((e, s) => {
-          if (e === 'SIGNED_IN' && s) navigate('/profile', { replace: true })
-        })
-        unsub = () => sub.data.subscription.unsubscribe()
-
-        setTimeout(async () => {
-          const { data: again } = await supabase.auth.getSession()
-          if (again.session) navigate('/profile', { replace: true })
-        }, 800)
       } catch (e: any) {
         setCallbackError(e?.message || 'Link invalid or expired.')
       }
-    }
-
-    run()
-    return () => {
-      if (unsub) unsub()
-    }
+    })()
   }, [navigate])
 
-  // --- Magic link submit ---
-  const onMagicLinkSubmit = async (e: React.FormEvent) => {
+  // Magic link submit
+  const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
-    setMessage('')
+    setMlLoading(true)
+    setMlError('')
+    setMlMessage('')
     try {
-      const appUrl = import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
-      await supabase.auth.signInWithOtp({
+      const APP_URL = import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
+      const redirect = `${APP_URL}/auth/callback`
+
+      const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${appUrl}/auth/callback` },
+        options: { emailRedirectTo: redirect },
       })
-      setMessage('Check your email for the magic link!')
+      if (error) throw error
+      setMlMessage('Check your email for the magic link.')
     } catch (err: any) {
-      setError(err?.message ?? 'Something went wrong.')
+      setMlError(err?.message ?? 'Something went wrong.')
     } finally {
-      setLoading(false)
+      setMlLoading(false)
     }
   }
 
-  // --- Password sign-in submit (renamed to avoid duplicates) ---
-  const onPasswordSignInSubmit = async (e: React.FormEvent) => {
+  // Password sign-in (unique name so there’s no symbol duplication)
+  const onPasswordSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setMessage('')
     setPwLoading(true)
+    setPwError('')
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: pwEmail,
@@ -130,29 +113,25 @@ export default function AuthSignIn() {
       if (error) throw error
       navigate('/profile', { replace: true })
     } catch (err: any) {
-      setError(err?.message ?? 'Could not sign in with password.')
+      setPwError(err?.message ?? 'Invalid email or password.')
     } finally {
       setPwLoading(false)
     }
   }
 
-  // --- Reset password submit ---
-  const onSendResetEmail = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setResetErr(null)
-    setResetMsg(null)
-    setResetLoading(true)
+  // Forgot password → send recovery email to /auth/callback
+  const onForgotPassword = async () => {
+    setPwError('')
     try {
-      const appUrl = import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${appUrl}/auth/callback`,
+      const APP_URL = import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
+      const redirect = `${APP_URL}/auth/callback`
+      const { error } = await supabase.auth.resetPasswordForEmail(pwEmail, {
+        redirectTo: redirect,
       })
       if (error) throw error
-      setResetMsg('If that email is registered, a reset link has been sent.')
+      setPwError('We emailed you a link to reset your password.')
     } catch (err: any) {
-      setResetErr(err?.message ?? 'Could not send reset email.')
-    } finally {
-      setResetLoading(false)
+      setPwError(err?.message ?? 'Could not send reset email.')
     }
   }
 
@@ -168,12 +147,20 @@ export default function AuthSignIn() {
           <p className="text-slate-600">Sign in to access your network tools</p>
         </div>
 
-        {/* MAGIC LINK CARD */}
-        <Card className="shadow-lg border-0 mb-6">
+        <Card className="shadow-lg border-0">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center gap-2">
-              <Mail className="w-5 h-5 text-blue-600" />
-              Sign In with Email (Magic Link)
+              {mode === 'magic' ? (
+                <>
+                  <Mail className="w-5 h-5 text-blue-600" />
+                  Sign In with Email
+                </>
+              ) : (
+                <>
+                  <Lock className="w-5 h-5 text-blue-600" />
+                  Sign In with Password
+                </>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -193,171 +180,142 @@ export default function AuthSignIn() {
               </Alert>
             )}
 
-            {message && (
-              <Alert className="mb-4 border-green-200 bg-green-50">
-                <AlertDescription className="text-green-700">
-                  {message}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {error && (
-              <Alert className="mb-4 border-red-200 bg-red-50">
-                <AlertDescription className="text-red-700">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <form onSubmit={onMagicLinkSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                  disabled={loading}
-                  className="mt-1"
-                />
-              </div>
-
+            {/* Toggle */}
+            <div className="flex items-center justify-center gap-3 mb-6">
               <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                disabled={loading}
+                variant={mode === 'magic' ? 'default' : 'outline'}
+                onClick={() => setMode('magic')}
+                size="sm"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Sending Magic Link...
-                  </>
-                ) : (
-                  <>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Send Magic Link
-                  </>
-                )}
+                Magic Link
               </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* PASSWORD SIGN-IN CARD (optional) */}
-        <Card className="shadow-lg border-0">
-          <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2">
-              <Lock className="w-5 h-5 text-slate-600" />
-              Sign In with Password
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={onPasswordSignInSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="pw-email">Email Address</Label>
-                <Input
-                  id="pw-email"
-                  type="email"
-                  value={pwEmail}
-                  onChange={(e) => setPwEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  disabled={pwLoading}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="pw">Password</Label>
-                <Input
-                  id="pw"
-                  type="password"
-                  value={pw}
-                  onChange={(e) => setPw(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  disabled={pwLoading}
-                  className="mt-1"
-                />
-              </div>
-
-              <Button type="submit" className="w-full" disabled={pwLoading}>
-                {pwLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Signing in…
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </form>
-
-            {/* Forgot Password */}
-            <div className="mt-3 text-right">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowReset((s) => !s)
-                  if (!resetEmail && pwEmail) setResetEmail(pwEmail)
-                }}
-                className="text-sm text-blue-600 hover:text-blue-700"
+              <Button
+                variant={mode === 'password' ? 'default' : 'outline'}
+                onClick={() => setMode('password')}
+                size="sm"
               >
-                {showReset ? 'Hide password reset' : 'Forgot password?'}
-              </button>
+                Password
+              </Button>
             </div>
 
-            {/* Reset Password Panel */}
-            {showReset && (
-              <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-700 mb-3">
-                  We’ll email you a link to reset your password.
-                </p>
-
-                {resetMsg && (
-                  <Alert className="mb-3 border-green-200 bg-green-50">
-                    <AlertDescription className="text-green-700">{resetMsg}</AlertDescription>
+            {mode === 'magic' ? (
+              <form onSubmit={handleMagicLink} className="space-y-4">
+                {mlMessage && (
+                  <Alert className="mb-2 border-green-200 bg-green-50">
+                    <AlertDescription className="text-green-700">{mlMessage}</AlertDescription>
                   </Alert>
                 )}
-                {resetErr && (
-                  <Alert className="mb-3 border-red-200 bg-red-50">
-                    <AlertDescription className="text-red-700">{resetErr}</AlertDescription>
+                {mlError && (
+                  <Alert className="mb-2 border-red-200 bg-red-50">
+                    <AlertDescription className="text-red-700">{mlError}</AlertDescription>
                   </Alert>
                 )}
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                    disabled={mlLoading}
+                    className="mt-1"
+                  />
+                </div>
 
-                <form onSubmit={onSendResetEmail} className="space-y-3">
-                  <div>
-                    <Label htmlFor="reset-email">Email Address</Label>
-                    <Input
-                      id="reset-email"
-                      type="email"
-                      value={resetEmail}
-                      onChange={(e) => setResetEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      required
-                      disabled={resetLoading}
-                      className="mt-1"
-                    />
-                  </div>
-                  <Button type="submit" disabled={resetLoading}>
-                    {resetLoading ? (
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  disabled={mlLoading}
+                >
+                  {mlLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Sending Magic Link…
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Send Magic Link
+                    </>
+                  )}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={onPasswordSignIn} className="space-y-4">
+                {pwError && (
+                  <Alert className="mb-2 border-red-200 bg-red-50">
+                    <AlertDescription className="text-red-700">{pwError}</AlertDescription>
+                  </Alert>
+                )}
+                <div>
+                  <Label htmlFor="pwEmail">Email Address</Label>
+                  <Input
+                    id="pwEmail"
+                    type="email"
+                    value={pwEmail}
+                    onChange={(e) => setPwEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    disabled={pwLoading}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pw">Password</Label>
+                  <Input
+                    id="pw"
+                    type="password"
+                    value={pw}
+                    onChange={(e) => setPw(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    disabled={pwLoading}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="px-0 text-blue-600"
+                    onClick={onForgotPassword}
+                    disabled={!pwEmail || pwLoading}
+                  >
+                    Forgot password?
+                  </Button>
+
+                  <Button
+                    type="submit"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                    disabled={pwLoading}
+                  >
+                    {pwLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Sending…
+                        Signing in…
                       </>
                     ) : (
-                      'Send Reset Link'
+                      <>
+                        <Lock className="w-4 h-4 mr-2" />
+                        Sign In
+                      </>
                     )}
                   </Button>
-                </form>
-
-                <p className="mt-2 text-xs text-slate-500">
-                  Follow the link in your email; you’ll be routed back here and signed into a
-                  recovery session. Then set your new password on your Profile page.
-                </p>
-              </div>
+                </div>
+              </form>
             )}
+
+            <div className="mt-6 text-center text-sm text-slate-600">
+              <p>
+                Don&apos;t have an account?{' '}
+                <Link to="/sign-up" className="text-blue-600 hover:text-blue-700 font-medium">
+                  Create one here
+                </Link>
+              </p>
+            </div>
           </CardContent>
         </Card>
 
