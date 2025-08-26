@@ -1,57 +1,59 @@
+// src/pages/AuthCallback.tsx
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabaseClient'
 
 function parseHashTokens(hash: string) {
   const p = new URLSearchParams(hash.replace(/^#/, ''))
-  const access_token = p.get('access_token') || undefined
-  const refresh_token = p.get('refresh_token') || undefined
-  return { access_token, refresh_token }
+  return {
+    access_token: p.get('access_token') || undefined,
+    refresh_token: p.get('refresh_token') || undefined,
+    error: p.get('error') || undefined
+  }
 }
 
 export default function AuthCallback() {
   const navigate = useNavigate()
-  const [error, setError] = useState<string | null>(null)
+  const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
     (async () => {
       try {
         const href = window.location.href
         const hasHash = window.location.hash.includes('access_token')
+        console.log('[callback] href=', href)
 
         if (hasHash) {
-          // Handle magic-link/hash tokens
-          const { access_token, refresh_token } = parseHashTokens(window.location.hash)
+          // Magic-link flow
+          const { access_token, refresh_token, error } = parseHashTokens(window.location.hash)
+          if (error) throw new Error(error)
           if (!access_token || !refresh_token) throw new Error('Missing tokens in hash')
-          const { error } = await supabase.auth.setSession({ access_token, refresh_token })
-          if (error) throw error
+          const { error: setErrRes } = await supabase.auth.setSession({ access_token, refresh_token })
+          if (setErrRes) throw setErrRes
         } else {
-          // Handle PKCE ?code=...
-          const { error } = await supabase.auth.exchangeCodeForSession(href)
-          if (error) throw error
+          // PKCE flow
+          const { error: exErr } = await supabase.auth.exchangeCodeForSession(href)
+          if (exErr) throw exErr
         }
 
-        // Clean URL and move on
         window.history.replaceState({}, '', '/')
         navigate('/profile', { replace: true })
       } catch (e: any) {
-        setError(e?.message ?? 'Authentication failed')
+        console.error('[callback] failed:', e)
+        setErr(e?.message ?? 'Authentication failed')
       }
     })()
   }, [navigate])
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="rounded-lg border px-6 py-4">
-        {error ? (
-          <>
-            <div className="text-red-600 font-semibold mb-2">Couldn’t complete sign-in</div>
-            <div className="text-sm text-slate-600">{String(error)}</div>
-          </>
-        ) : (
-          <div className="text-slate-700">Finishing sign-in…</div>
-        )}
-      </div>
+      {err ? (
+        <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          Couldn’t complete sign-in<br/>{err}
+        </div>
+      ) : (
+        <div className="rounded border px-4 py-3 text-slate-700">Finishing sign-in…</div>
+      )}
     </div>
   )
 }
