@@ -1,70 +1,89 @@
- import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+// FILE: src/pages/AuthCallback.tsx
+import { useEffect, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabaseClient'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 
 export default function AuthCallback() {
   const navigate = useNavigate()
-  const [status, setStatus] = useState<'working' | 'ok' | 'error'>('working')
-  const [message, setMessage] = useState('Completing sign-in…')
+  const [status, setStatus] = useState<'working'|'ok'|'error'|'empty'>('working')
+  const [message, setMessage] = useState<string>('')
 
   useEffect(() => {
-    let cancelled = false
+    const run = async () => {
+      const href = window.location.href
+      const hasParams = href.includes('code=') || href.includes('access_token=') || href.includes('provider_token=')
 
-    const complete = async () => {
+      if (!hasParams) {
+        setStatus('empty')
+        return
+      }
+
       try {
-        // Works for both PKCE code flow (?code=…&code_verifier=…) and hash magic links (#access_token=…)
-        const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
+        const { error } = await supabase.auth.exchangeCodeForSession(href)
         if (error) throw error
 
-        if (!cancelled) {
+        // Clean the URL so refresh doesn't repeat the exchange
+        window.history.replaceState({}, '', '/auth/callback')
+
+        // Confirm session, then go
+        const { data } = await supabase.auth.getSession()
+        if (data.session) {
           setStatus('ok')
-          setMessage('Signed in successfully. Redirecting…')
-          // Small delay so users can see the success state
-          setTimeout(() => navigate('/profile', { replace: true }), 300)
+          navigate('/profile', { replace: true })
+          return
         }
+
+        // final safety net
+        setTimeout(async () => {
+          const { data: again } = await supabase.auth.getSession()
+          if (again.session) navigate('/profile', { replace: true })
+          else {
+            setStatus('error')
+            setMessage('Could not complete sign-in. Please try again.')
+          }
+        }, 600)
       } catch (e: any) {
-        if (!cancelled) {
-          setStatus('error')
-          setMessage(e?.message || 'Could not complete sign-in. Please try again.')
-          // After a short pause, bounce to /sign-in where users can retry
-          setTimeout(() => navigate('/sign-in', { replace: true }), 1200)
-        }
+        setStatus('error')
+        setMessage(e?.message ?? 'Could not complete sign-in. Please try again.')
       }
     }
 
-    complete()
-    return () => {
-      cancelled = true
-    }
+    run()
   }, [navigate])
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4">
-      <div className="w-full max-w-md text-center">
-        <div className="rounded-xl border bg-white/70 backdrop-blur p-6 shadow">
-          {status === 'working' && (
-            <>
-              <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-              <h1 className="text-lg font-semibold text-slate-800">Finishing up…</h1>
-              <p className="mt-2 text-slate-600">{message}</p>
-            </>
-          )}
-
-          {status === 'ok' && (
-            <>
-              <h1 className="text-lg font-semibold text-slate-800">Success</h1>
-              <p className="mt-2 text-slate-600">{message}</p>
-            </>
-          )}
-
-          {status === 'error' && (
-            <>
-              <h1 className="text-lg font-semibold text-red-700">Couldn’t complete sign-in</h1>
-              <p className="mt-2 text-slate-600">{message}</p>
-            </>
-          )}
+  if (status === 'working') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-3 text-slate-600">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          Completing sign-in…
         </div>
       </div>
+    )
+  }
+
+  if (status === 'ok') return null
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="max-w-md w-full">
+        <CardHeader>
+          <CardTitle>Couldn’t complete sign-in</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-slate-600">
+            {status === 'empty'
+              ? 'This page expects a sign-in code or token, but none was found in the URL.'
+              : message || 'Something went wrong.'}
+          </p>
+          <Button asChild className="w-full">
+            <Link to="/sign-in">Try again</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }
