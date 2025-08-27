@@ -25,25 +25,21 @@ import {
 export default function Profile() {
   const { session, ready } = useSession()
   const navigate = useNavigate()
-
-  // Centralized email verification state
   const { verifying, emailVerified, refresh } = useEmailVerified(session)
-
-  // One-time auto-resend status
   const [autoResendOk, setAutoResendOk] = useState<string | null>(null)
   const [autoResendErr, setAutoResendErr] = useState<string | null>(null)
 
-  // If no session after a small delay, go to /sign-in
+  // Debug
+  console.debug('[Profile] ready:', ready, 'session:', session)
+
+  // Redirect immediately if ready && no session
   useEffect(() => {
-    if (!ready) return
-    if (session) return
-    const t = setTimeout(() => {
-      if (!session) navigate('/sign-in', { replace: true })
-    }, 800)
-    return () => clearTimeout(t)
+    if (ready && !session) {
+      navigate('/sign-in', { replace: true })
+    }
   }, [ready, session, navigate])
 
-  // Auto-resend *once per browser session* if user is unverified
+  // Auto-resend verification
   useEffect(() => {
     const email = session?.user?.email
     if (!email || !session) return
@@ -89,19 +85,16 @@ export default function Profile() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      <div className="min-h-screen flex items-center justify-center text-slate-600">
+        <p>Loading session…</p>
       </div>
     )
   }
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-slate-600 mb-4">Redirecting to sign in...</p>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
-        </div>
+      <div className="min-h-screen flex items-center justify-center text-slate-600">
+        <p>No active session. Redirecting…</p>
       </div>
     )
   }
@@ -113,7 +106,6 @@ export default function Profile() {
     'User'
   const initial = (user.email?.charAt(0) || 'U').toUpperCase()
   const joined = useMemo(() => new Date(user.created_at).toLocaleDateString(), [user.created_at])
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
