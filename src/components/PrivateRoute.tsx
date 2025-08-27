@@ -2,28 +2,27 @@
 import { Outlet, Navigate, useLocation } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
 
+function FullscreenSpinner() {
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="animate-spin h-6 w-6 rounded-full border-2 border-slate-300 border-t-blue-600" />
+    </div>
+  )
+}
+
 export default function PrivateRoute() {
   const { session, ready } = useSession()
   const location = useLocation()
 
-  // Helpful debug during integration
-  console.debug('[PrivateRoute] ready:', ready, 'session:', !!session, 'path:', location.pathname)
+  // While the session is initializing, render a tiny spinner instead of nothing.
+  if (!ready) return <FullscreenSpinner />
 
-  // While we don't yet know if a session exists, render a lightweight loader
-  if (!ready) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-slate-600">
-        Checking your session…
-      </div>
-    )
+  // Not signed in → send to /sign-in and preserve where we were going.
+  if (!session) {
+    const next = encodeURIComponent(location.pathname + location.search + location.hash)
+    return <Navigate to={`/sign-in?next=${next}`} replace />
   }
 
-  // If there is a valid session, render the nested protected route
-  if (session) {
-    return <Outlet />
-  }
-
-  // Otherwise go to sign-in and remember where the user wanted to go
-  const next = encodeURIComponent(location.pathname + location.search + location.hash)
-  return <Navigate to={`/sign-in?next=${next}`} replace />
+  // All good → render the protected outlet
+  return <Outlet />
 }
