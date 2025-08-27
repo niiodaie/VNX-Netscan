@@ -3,98 +3,36 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
 import { supabase } from '@/lib/supabaseClient'
-import UsernameField from '@/components/profile/UsernameField'
-import EmailVerifyBanner from '@/components/profile/EmailVerifyBanner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useEmailVerified } from '@/hooks/useEmailVerified'
-import { resendVerificationEmail } from '@/lib/auth'
 import {
-  User,
-  Mail,
-  Calendar,
-  Crown,
-  Settings,
-  LogOut,
-  Shield,
-  Activity,
+  User, Mail, Calendar, Crown, Settings, LogOut, Shield, Activity,
 } from 'lucide-react'
 
 export default function Profile() {
   const { session, ready } = useSession()
   const navigate = useNavigate()
-  const { verifying, emailVerified, refresh } = useEmailVerified(session)
-  const [autoResendOk, setAutoResendOk] = useState<string | null>(null)
-  const [autoResendErr, setAutoResendErr] = useState<string | null>(null)
 
-  // Debug
-  console.debug('[Profile] ready:', ready, 'session:', session)
-
-  // Redirect immediately if ready && no session
-  useEffect(() => {
-    if (ready && !session) {
-      navigate('/sign-in', { replace: true })
-    }
-  }, [ready, session, navigate])
-
-  // Auto-resend verification
-  useEffect(() => {
-    const email = session?.user?.email
-    if (!email || !session) return
-    if (emailVerified) return
-
-    const key = `nl_auto_resend_${session.user.id}`
-    if (sessionStorage.getItem(key)) return
-
-    ;(async () => {
-      try {
-        const appUrl = import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
-        const { error } = await supabase.auth.resend({
-          type: 'signup',
-          email,
-          options: { emailRedirectTo: `${appUrl}/sign-in` },
-        })
-        if (error) throw error
-        setAutoResendOk('We sent you a fresh verification email.')
-        sessionStorage.setItem(key, '1')
-      } catch (e: any) {
-        setAutoResendErr(e?.message ?? 'Could not send verification email.')
-        sessionStorage.setItem(key, '1')
-      }
-    })()
-  }, [session, emailVerified])
-
-  const handleManualResend = async () => {
-    if (!session?.user?.email) return
-    const result = await resendVerificationEmail(session.user.email)
-    if (result.ok) {
-      setAutoResendOk('Verification email sent.')
-      setAutoResendErr(null)
-    } else {
-      setAutoResendErr(result.error ?? 'Unable to send verification email.')
-      setAutoResendOk(null)
-    }
-  }
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    navigate('/sign-in', { replace: true })
-  }
-
+  // show a visible loader while we decide
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-600">
-        <p>Loading session…</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     )
   }
 
+  // if checked and no session → bounce
   if (!session) {
+    // keep UX smooth if someone hits /profile manually
+    useEffect(() => {
+      navigate('/sign-in', { replace: true })
+    }, [navigate])
     return (
       <div className="min-h-screen flex items-center justify-center text-slate-600">
-        <p>No active session. Redirecting…</p>
+        Redirecting…
       </div>
     )
   }
@@ -106,43 +44,23 @@ export default function Profile() {
     'User'
   const initial = (user.email?.charAt(0) || 'U').toUpperCase()
   const joined = useMemo(() => new Date(user.created_at).toLocaleDateString(), [user.created_at])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    navigate('/sign-in', { replace: true })
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-slate-800 mb-2">Profile</h1>
             <p className="text-slate-600">Manage your account and preferences</p>
           </div>
 
-          {/* Auto-resend status (only if unverified) */}
-          {!emailVerified && (autoResendOk || autoResendErr) && (
-            <div
-              className={`mb-4 rounded-lg border px-4 py-3 ${
-                autoResendOk
-                  ? 'border-green-200 bg-green-50 text-green-800'
-                  : 'border-red-200 bg-red-50 text-red-800'
-              }`}
-            >
-              {autoResendOk ?? autoResendErr}
-            </div>
-          )}
-
-          {/* Email verification banner (with manual resend) */}
-          {!emailVerified && (
-            <div className="mb-6">
-              <EmailVerifyBanner
-                email={user.email!}
-                redirectPath="/sign-in"
-                onResend={handleManualResend}
-                onRefresh={refresh}
-              />
-            </div>
-          )}
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Profile Card */}
+            {/* Left card */}
             <div className="lg:col-span-1">
               <Card className="shadow-lg border-0">
                 <CardHeader className="text-center">
@@ -156,15 +74,7 @@ export default function Profile() {
                   </CardTitle>
                   <div className="flex justify-center gap-2 mt-2">
                     <Badge variant="secondary">Free Plan</Badge>
-                    {emailVerified ? (
-                      <Badge className="bg-green-100 text-green-700 border-green-200">
-                        Email Verified
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">
-                        Verify Email
-                      </Badge>
-                    )}
+                    <Badge className="bg-green-100 text-green-700 border-green-200">Signed In</Badge>
                   </div>
                 </CardHeader>
 
@@ -177,29 +87,17 @@ export default function Profile() {
                     <Calendar className="w-4 h-4" />
                     Joined {joined}
                   </div>
-                  {verifying && (
-                    <div className="flex items-center gap-3 text-sm text-slate-600">
-                      <Shield className="w-4 h-4" />
-                      Checking verification…
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Main Content */}
+            {/* Right column */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Account Details */}
               <Card className="shadow-lg border-0">
                 <CardHeader>
                   <CardTitle>Account Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <UsernameField
-                    userId={user.id}
-                    initial={(user as any).user_metadata?.username ?? undefined}
-                  />
-
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                     <div>
                       <h3 className="font-medium text-slate-800">Email Address</h3>
@@ -208,13 +106,13 @@ export default function Profile() {
                     <Button variant="outline" size="sm">Change</Button>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                    <div>
-                      <h3 className="font-medium text-slate-800">Password</h3>
-                      <p className="text-sm text-slate-600">••••••••</p>
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                      <div>
+                        <h3 className="font-medium text-slate-800">Password</h3>
+                        <p className="text-sm text-slate-600">••••••••</p>
+                      </div>
+                      <Button variant="outline" size="sm">Update</Button>
                     </div>
-                    <Button variant="outline" size="sm">Update</Button>
-                  </div>
 
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                     <div>
@@ -226,7 +124,6 @@ export default function Profile() {
                 </CardContent>
               </Card>
 
-              {/* Quick Actions */}
               <Card className="shadow-lg border-0">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -252,30 +149,6 @@ export default function Profile() {
                 </CardContent>
               </Card>
 
-              {/* Usage Stats (placeholder) */}
-              <Card className="shadow-lg border-0">
-                <CardHeader>
-                  <CardTitle>Usage Statistics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">127</div>
-                      <div className="text-sm text-slate-600">IP Lookups</div>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">43</div>
-                      <div className="text-sm text-slate-600">Port Scans</div>
-                    </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600">89</div>
-                      <div className="text-sm text-slate-600">Domain Queries</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Sign Out */}
               <Card className="shadow-lg border-0">
                 <CardContent className="pt-6">
                   <Button
