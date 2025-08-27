@@ -1,5 +1,6 @@
+// src/hooks/useSession.ts
 import { useEffect, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
+import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabaseClient'
 
 export function useSession() {
@@ -9,20 +10,19 @@ export function useSession() {
   useEffect(() => {
     let unsub: (() => void) | undefined
 
-    ;(async () => {
+    const init = async () => {
       const { data } = await supabase.auth.getSession()
       setSession(data.session ?? null)
       setReady(true)
 
-      const sub = supabase.auth.onAuthStateChange((_e, s) => {
+      const sub = supabase.auth.onAuthStateChange((_event, s) => {
         setSession(s ?? null)
       })
       unsub = () => sub.data.subscription.unsubscribe()
-    })()
-
-    return () => {
-      if (unsub) unsub()
     }
+
+    init()
+    return () => unsub?.()
   }, [])
 
   return { session, ready }
