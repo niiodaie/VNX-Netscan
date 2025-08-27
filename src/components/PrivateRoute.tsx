@@ -1,14 +1,13 @@
 // components/PrivateRoute.tsx
-import { Outlet, Navigate, useLocation } from 'react-router-dom'
+import { Outlet, Navigate } from 'react-router-dom'
 import { useSession } from '@/hooks/useSession'
 
-export default function PrivateRoute({
-  fallback,
-}: {
-  fallback?: React.ReactNode
-}) {
+export default function PrivateRoute() {
   const { session, ready } = useSession()
-  const location = useLocation()
+  if (!ready) return null // or a spinner
+  return session ? <Outlet /> : <Navigate to="/sign-in" replace />
+}
+
 
   // While we don't yet know if the user is signed in, show a tiny loader
   if (!ready) {
