@@ -24,35 +24,38 @@ import PrivateRoute from '@/components/PrivateRoute'
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/sign-in" element={<AuthSignIn />} />
-            <Route path="/sign-up" element={<AuthSignUp />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-             <Route path="*" element={<NotFound />} />
-            
-            {/* Protected routes */}
-            <Route element={<PrivateRoute />}>
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-            </Route>
+   <BrowserRouter>
+  <div className="min-h-screen flex flex-col">
+    <Header />
+    <main className="flex-1">
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/sign-in" element={<AuthSignIn />} />
+        <Route path="/sign-up" element={<AuthSignUp />} />
+        {/* ⬇️ keep callback public */}
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
-            {/* Public extras */}
-            <Route path="/demo-dashboard" element={<DemoDashboard />} />
-            <Route path="/demo" element={<DemoDashboard />} />
-            <Route path="/upgrade" element={<Upgrade />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </BrowserRouter>
+        {/* Protected routes */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
+
+        {/* Public extras */}
+        <Route path="/demo-dashboard" element={<DemoDashboard />} />
+        <Route path="/demo" element={<DemoDashboard />} />
+        <Route path="/upgrade" element={<Upgrade />} />
+        <Route path="/support" element={<Support />} />
+
+        {/* Single catch-all */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </main>
+    <Footer />
+  </div>
+</BrowserRouter>
+
   )
 }
 
