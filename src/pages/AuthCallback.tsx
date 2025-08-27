@@ -1,99 +1,54 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function AuthCallback() {
   const navigate = useNavigate()
+  const [msg, setMsg] = useState('Completing sign‑in…')
+  const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    let unsub: (() => void) | undefined
-
-    const cleanUrl = () => {
-      const url = new URL(window.location.href)
-      url.hash = ''
-      url.search = ''
-      window.history.replaceState({}, '', url.toString())
-    }
-
-    const finish = (ok: boolean, message?: string) => {
-      if (cancelled) return
-      cleanUrl()
-      if (ok) {
-        navigate('/profile', { replace: true })
-      } else {
-        navigate(`/sign-in?message=${encodeURIComponent(message || 'Could not complete sign-in')}`, { replace: true })
-      }
-    }
 
     const run = async () => {
-      const url = new URL(window.location.href)
+      try {
+        // Full URL including hash fragment (?/#) for PKCE flow
+        const fullUrl = window.location.href
+        const { error } = await supabase.auth.exchangeCodeForSession(fullUrl)
+        if (error) throw error
 
-      // If Supabase provided an error in query, bail early with context
-      const err = url.searchParams.get('error')
-      const errDesc = url.searchParams.get('error_description')
-      if (err) {
-        finish(false, errDesc || 'Email link is invalid or has expired')
-        return
-      }
-
-      // 1) Try PKCE
-      const pkce = await supabase.auth.exchangeCodeForSession(window.location.href)
-      if (!pkce.error) {
-        // double-check session exists
-        const { data } = await supabase.auth.getSession()
-        if (data.session) {
-          finish(true)
-          return
+        if (!cancelled) {
+          setMsg('Signed in! Redirecting…')
+          // Clean the URL so refreshes don't retry the exchange
+          window.history.replaceState({}, '', '/auth/callback')
+          navigate('/profile', { replace: true })
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          const detail = e?.message ?? 'Could not complete sign‑in.'
+          setErr(detail)
+          setMsg('')
         }
       }
-
-      // 2) Fallback: verify token_hash (works when link opened on another device)
-      const tokenHash = url.searchParams.get('token_hash')
-      const urlType =
-        (url.searchParams.get('type') ||
-          'magiclink') as 'magiclink' | 'signup' | 'recovery' | 'email_change' | 'invite'
-
-      if (tokenHash) {
-        const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: urlType })
-        if (!error && data.session) {
-          finish(true)
-          return
-        }
-        finish(false, error?.message || 'Could not complete sign-in')
-        return
-      }
-
-      // 3) As a final guard, subscribe briefly for SIGNED_IN (race-y environments)
-      const sub = supabase.auth.onAuthStateChange((_e, session) => {
-        if (session) {
-          finish(true)
-        }
-      })
-      unsub = () => sub.data.subscription.unsubscribe()
-
-      // Give it a short moment, then decide
-      setTimeout(async () => {
-        const { data } = await supabase.auth.getSession()
-        if (data.session) {
-          finish(true)
-        } else {
-          finish(false, pkce.error?.message || 'Email link is invalid or has expired')
-        }
-      }, 600)
     }
 
     run()
-    return () => {
-      cancelled = true
-      if (unsub) unsub()
-    }
+    return () => { cancelled = true }
   }, [navigate])
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="rounded-lg border bg-white p-6 shadow-sm text-slate-700">
-        Finishing sign-in…
+    <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="max-w-md w-full text-center space-y-4">
+        {msg && <p className="text-slate-700">{msg}</p>}
+        {err && (
+          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
+            <p className="font-medium">Couldn’t complete sign‑in</p>
+            <p className="text-sm mt-1">{err}</p>
+            <a href="/sign-in" className="inline-block mt-4 text-blue-600 underline">
+              Back to sign‑in
+            </a>
+          </div>
+        )}
       </div>
     </div>
   )
