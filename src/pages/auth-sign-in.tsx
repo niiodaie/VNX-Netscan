@@ -1,3 +1,4 @@
+// src/pages/auth-sign-in.tsx
 import { useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -7,10 +8,21 @@ export default function AuthSignIn() {
   const [ok, setOk] = useState<string>('')
   const [err, setErr] = useState<string>('')
 
-  const showCheckEmail = useMemo(() => {
+  // Read URL params once (on first render)
+  const { showCheckEmail, initialError, nextPath } = useMemo(() => {
     const sp = new URLSearchParams(window.location.search)
-    return sp.get('check-email') === '1'
+    const showCheckEmail = sp.get('check-email') === '1'
+    const initialError = sp.get('message') || ''
+    // Prefer explicit ?next=, else anything we stored when user tried to hit a protected route,
+    // else default to /profile after sign-in.
+    const nextPath = sp.get('next') || sessionStorage.getItem('nl_next') || '/profile'
+    return { showCheckEmail, initialError, nextPath }
   }, [])
+
+  // hydrate any incoming error from /auth/callback
+  useMemo(() => {
+    if (initialError) setErr(initialError)
+  }, [initialError])
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,16 +31,22 @@ export default function AuthSignIn() {
     setOk('')
 
     try {
+      // Remember next (extra safety if the email client strips params)
+      try {
+        sessionStorage.setItem('nl_next', nextPath)
+      } catch {}
+
       const appUrl = import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
-      const redirectTo = `${appUrl}/auth/callback`
+      // Pass next through so /auth/callback can pick it up if sessionStorage is unavailable
+      const redirectTo = `${appUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`
 
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: redirectTo }
+        options: { emailRedirectTo: redirectTo },
       })
       if (error) throw error
 
-      setOk('Check your email for the magic link.')
+      setOk('Check your email for the magic link. Once you click it, you will be signed in automatically.')
     } catch (e: any) {
       setErr(e?.message ?? 'Something went wrong.')
     } finally {
