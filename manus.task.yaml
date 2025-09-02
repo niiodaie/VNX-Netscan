@@ -1,0 +1,18 @@
+name: VNX-Netscan
+description: Production build and bundle of NetLookup (client + server) with Supabase auth and Stripe-ready backend.
+instructions: |
+  - Run `./scripts/build.sh` to install and build client & server.
+  - Copy client build into `server/dist` with `./scripts/bundle.sh`.
+  - Ensure `server` serves static files from `server/dist` and exposes `/api`.
+  - Do not include node_modules or .env in the final artifact.
+  - Output a single deployment zip: `VNX-Netscan-Deployment.zip` (server folder as root).
+  - Validate routes:
+      GET /           -> serves client index.html
+      GET /dashboard  -> client route works (SPA fallback)
+      GET /api/health -> 200 OK
+      POST /api/secure-scan -> requires Authorization: Bearer <token>
+
+artifacts:
+  - type: zip
+    path: ./VNX-Netscan-Deployment.zip
+    name: VNX-Netscan-Deployment.zip
